@@ -1,5 +1,5 @@
 name: example
-description: An example web application with finch package dart.
+description: An example web application with Finch package dart.
 version: 1.0.0
 
 publish_to: none
