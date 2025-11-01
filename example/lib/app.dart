@@ -35,12 +35,6 @@ FinchConfigs configs = FinchConfigs(
     pass: 'example_password',
     databaseName: 'example_db',
   ),
-  blockStart: "{%",
-  blockEnd: "%}",
-  variableStart: "{{",
-  variableEnd: "}}",
-  commentStart: "{#",
-  commentEnd: "#}",
 
   /// Enable local debugger
   enableLocalDebugger: (env['ENABLE_LOCAL_DEBUGGER'] ?? true).toString().toBool,

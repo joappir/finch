@@ -25,7 +25,7 @@ FinchConfigs configs = FinchConfigs(
   port: 8085,
 );
 
-FinchServer server = FinchServer(configs: configs);
+FinchApp server = FinchApp(configs: configs);
 
 final socketManager = SocketManager(
   server,

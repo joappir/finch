@@ -36,7 +36,7 @@ class ApiController extends Controller {
   ///
   /// The [title] parameter is required and sets the API title.
   /// The [security] parameter defaults to `'apiKey'`.
-  /// [app] is the FinchServer instance containing the routes.
+  /// [app] is the FinchApp instance containing the routes.
   ApiController({
     required this.app,
     required this.title,

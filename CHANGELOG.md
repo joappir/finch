@@ -1,6 +1,9 @@
 
+## 1.0.0
+- First release of Finch
+- The Finch package was developed as an adaptation of the WebApp package. We made extensive improvements to WebApp, focusing on simplicity in coding and overall stability, and released the enhanced version under the name Finch. From now on, all future updates will be made to this package, and WebApp will soon be deprecated.
 
-## 3.0.0
+## WebApp-3.0.0
 #### Changes Applied to Remove `rq` Parameter from Controllers
 
 ##### Summary of Changes
@@ -18,7 +21,7 @@ In this project, all controllers and related classes have been updated to use a 
 - Removed `rq` parameter from constructor
 - Added `rq` getter that uses `RequestContext.current`
 
-###### 3. FinchServer Updates
+###### 3. FinchApp Updates
 - Added `RequestContext.run()` in request handlers
 - Set up request context at the beginning of each request
 
@@ -76,7 +79,7 @@ In this project, all controllers and related classes have been updated to use a 
     {{ #var }}, {{ var# }}, {{ @variable }}
     ```
 
-## 2.1.1
+## WebApp-2.1.1
 - Added SSE (Server-Sent Events) support:
   - `renderSSE()` method in WebRequest class for streaming real-time data
   - New `SSE` class for creating Server-Sent Events messages
@@ -91,28 +94,28 @@ In this project, all controllers and related classes have been updated to use a 
 - Added `tryJsonList()` method to FinchJson for safer JSON list parsing
 - Updated sqler dependency from 1.1.3 to 1.1.4
 
-## 2.1.0
+## WebApp-2.1.0
 - Added in line dump function for templates `{{ dump(var) }}`
 - Added internal Swagger Widget to show documentations
 - Fixed analizer reports
 - Imoroved examples
 
-## 2.0.3
+## WebApp-2.0.3
 - Trimming the input values received through GET/POST methods
 - Enhancing security measures to mitigate XSS and injection vulnerabilities
 
-## 2.0.2
+## WebApp-2.0.2
 - Improved `Htmler` tags
 - Added `renderTag` to `WebRequest` class
 - Added safe filter for templates of jinja
 
-## 2.0.1
+## WebApp-2.0.1
 - Update Error pages style
 - Added Htmler class (beta)
 - Updated cli input handlers while running app.
 - Fixed bugs
 
-## 2.0.0
+## WebApp-2.0.0
 - Added Mysql database
 - Added Sqler query generator
 - Fixed some issus on FormValidators
@@ -123,90 +126,90 @@ In this project, all controllers and related classes have been updated to use a 
 - Added Migration functionality for Mysql
 - Added cli input handlers while running app.
 
-## 1.1.18
+## WebApp-1.1.18
 - added $rq so that the current WebRequest can be accessed within templates. This will be useful for developing Local Events.
 
-## 1.1.17 & 1.1.16
+## WebApp-1.1.17 & 1.1.16
 - Added custome error layout for `WebRequest`
 - Fixes reports of dart analyze
 
-## 1.1.15
+## WebApp-1.1.15
 - Fixes an error on getAll function of `DBCollectionFree`
 - Fixes renew indexes of mongodb collections (`DBCollectionFree`) after run app 
 - Add `collation` option for Indexes of `DBCollectionFree`
 
-## 1.1.14
+## WebApp-1.1.14
 - Add index for fields of `DBCollectionFree`
 - Add `Console.json(Object)` function to logs.
 
-## 1.1.12
+## WebApp-1.1.12
 - Fixes #6 issue, Using `List<ObjectId>` in mongodb collections as a field
 
-## 1.1.11
+## WebApp-1.1.11
 - Event listeners for insert, update, and delete documents in MongoDB collections for DBCollectionFree.
 
-## 1.1.10
+## WebApp-1.1.10
 - Fixes issues with DB Collection Free in defualt values, when the form is static
 
-## 1.1.9
+## WebApp-1.1.9
 - Fixed websocket
 
-## 1.1.8
+## WebApp-1.1.8
 - Fixed filtering in auto routing DbCollectionFree
 - Fixed reported logs of dart analyzer
 
-## 1.1.7
+## WebApp-1.1.7
 - Added children to auto routing DbCollectionFree
 
-## 1.1.6
+## WebApp-1.1.6
 - Fixed i18n with parameters
 
-## 1.1.5
+## WebApp-1.1.5
 - Added default content types for `WebRequest`
 - Improved field validators for forms
 - Fixed the FinchJson to encode and decode Symbol variables.
 
-## 1.1.4
+## WebApp-1.1.4
 - Fixed issue to start Database when starting project
 - Added relation field for Collection Free Model's
 - Updated dependencies
 
-## 1.1.3
+## WebApp-1.1.3
 - Fixed bearer authorization in webrequest
 - Auto router paths for api, in Collections Free Models
 
-## 1.1.2
+## WebApp-1.1.2
 - Added fix
 - Update dependencies
 - New example regarding video streaming
 
-## 1.1.1
+## WebApp-1.1.1
 - Resolved several bugs to enhance overall stability.
 - Implemented the Collections Free Model (CFM) for MongoDB, streamlining the development of rapid APIs, forms, and validation processes (refer to examples).
 - Enhanced existing examples for clearer guidance.
 - Integrated the Capp package to facilitate console-based operations.
 - Updated all dependencies to their latest versions to ensure compatibility and performance.
 
-## 1.0.34
+## WebApp-1.0.34
 - Fixed data parsing multipart/form-data while requested emprty
 - added tryData function to WebRequest(rq) class to return null or default value as unknown data in requests.
 - Improved IncludeController for the DS variable translation (.tr(), .trArray()).
 
-## 1.0.33
+## WebApp-1.0.33
 - Added build command for CLI:
     ```bash
     finch build -h
     ```
 - Added extentions for File & Directory classes to copy directory and working with file names
 
-## 1.0.32
+## WebApp-1.0.32
 - Fixed the redirection for external links/URI
 
 ## 1.0.31
 - Fixed Finch CLI to create new project in new paths
 - Fixed example
 
-## 1.0.30
+## WebApp-1.0.30
 - Fixed https/http urls for requests
 - Fixed layout of example
 - Fixed bug Language directory
@@ -219,7 +222,7 @@ In this project, all controllers and related classes have been updated to use a 
     finch create -p ./project_path -n example
     ```
 
-## 1.0.26
+## WebApp-1.0.26
 - Improved the Finch CLI
     - Fixed bug for OpenApi
     - An example for Swagger has been added: 'https://finch.uproid.com/swagger'
@@ -236,13 +239,13 @@ In this project, all controllers and related classes have been updated to use a 
        * Press 'q' to quit the project                   
     ```
 
-## 1.0.25
+## WebApp-1.0.25
 - Improved the Finch CLI
 
-## 1.0.24
+## WebApp-1.0.24
 - Fixed bug of `finch cli` in windows platforms
 
-## 1.0.22
+## WebApp-1.0.22
 - Fixed bugs
 - Added finch cli 
     ```bash
@@ -254,28 +257,28 @@ In this project, all controllers and related classes have been updated to use a 
     finch runner
     ```
 
-## 1.0.21
+## WebApp-1.0.21
 
 - Fixed bugs.
 - Improved the cron job.
 - Added new examples.
 - Added a `pathsEqual` function to check the equality of paths and endpoints. 
 
-## 1.0.17
+## WebApp-1.0.17
 
 - Fixed bugs
 - Added watcher to have hot reload in example file ./example/bin/watcher.dart
 
-## 1.0.16
+## WebApp-1.0.16
 
 - Expanded `WebRoute` to include port and hostname as part of the routing configuration.
 
-## 1.0.15
+## WebApp-1.0.15
 
 - Fixed routing bug for excluded paths
 - Fixed bug for dumping variables
 
-## 1.0.14
+## WebApp-1.0.14
 
 - Fixed routing issues
 - Added variable dumping to the frontend
@@ -285,18 +288,18 @@ In this project, all controllers and related classes have been updated to use a 
 - Updated examples
 - Refined unit tests
 
-## 1.0.10
+## WebApp-1.0.10
 
 - Fixed various bugs
 - Enhanced SMTP mail sender
 - Updated example section
 
-## 1.0.9
+## WebApp-1.0.9
 
 - Fixed bugs
 - Improved configuration classes
 - Updated example section
 
-## 1.0.0
+## WebApp-1.0.0
 
-- Initial release
+- Initial release WebApp

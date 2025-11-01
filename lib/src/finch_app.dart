@@ -37,7 +37,7 @@ import 'package:finch/finch_tools.dart';
 ///     link: 'mongodb://localhost:27017/myapp'
 ///   ),
 /// );
-/// final server = FinchServer(configs: config);
+/// final server = FinchApp(configs: config);
 /// await server.start();
 /// ```
 class FinchApp {

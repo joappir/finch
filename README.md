@@ -2,9 +2,14 @@
 
 A lightweight, robust, and feature-rich web framework for Dart that makes server-side development simple and enjoyable.
 
-[![Pub Version](https://img.shields.io/pub/v/finch)](https://pub.dev/packages/finch)
-[![License](https://img.shields.io/github/license/uproid/finch)](LICENSE)
-[![Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://finch.uproid.com)
+[![pub package](https://img.shields.io/pub/v/finch.svg)](https://pub.dev/packages/finch)
+[![Dev](https://img.shields.io/pub/v/finch.svg?label=dev&include_prereleases)](https://pub.dev/packages/finch)
+[![Donate](https://img.shields.io/badge/Donate-Support%20Finch-pink.svg)](https://buymeacoffee.com/fardziao)
+[![issues-closed](https://img.shields.io/github/issues-closed/uproid/finch?color=green)](https://github.com/uproid/finch/issues?q=is%3Aissue+is%3Aclosed) 
+[![issues-open](https://img.shields.io/github/issues-raw/uproid/finch)](https://github.com/uproid/finch/issues) 
+[![Contributions](https://img.shields.io/github/contributors/uproid/finch)](https://github.com/uproid/finch/blob/master/CONTRIBUTING.md)
+
+**The Finch package was developed as an adaptation of the WebApp package. We made extensive improvements to WebApp, focusing on simplicity in coding and overall stability, and released the enhanced version under the name Finch. From now on, all future updates will be made to this package, and WebApp will soon be deprecated.**
 
 ## Overview
 
@@ -92,25 +97,92 @@ Getting started with Finch is straightforward. Follow these steps to set up your
 
 2. **Create a basic server**:
 
-   ```dart
-   import 'package:finch/app.dart';
-   import 'package:finch/console.dart';
-   import 'package:finch/tools.dart';
+```dart
+final app = FinchApp(configs: configs);
 
-   void main() async {
-     final configs = FinchConfigs(
-       widgetsPath: "./widgets",
-       publicDir: "./public",
-       port: 8085,
-     );
+void main([List<String>? args]) async {
+  /// Example Web Route
+  app.addRouting(getWebRoute);
 
-     final server = FinchServer(configs: configs);
+  /// Add custom commands
+  app.commands.add(
+    CappController('example', options: [
+      CappOption(
+        name: 'test',
+        shortName: 't',
+        description: 'An example option',
+      ),
+    ], run: (c) async {
+      if (c.existsOption('test')) {
+        CappConsole.writeTable(
+          [
+            ['Column 1', 'Column 2', 'Column 3'],
+            ...List.filled(5, ['Data 1', 'Data 2', 'Data 3'])
+          ],
+          dubleBorder: true,
+          color: CappColors.warning,
+        );
+      }
 
-     server.start().then((value) {
-       Console.p("Server started: http://localhost:${value.port}");
-     });
-   }
-   ```
+      return CappConsole(
+        'This is an example command from Finch App! Time: ${DateTime.now()}',
+        CappColors.success,
+      );
+    }),
+  );
+
+  /// Or add routes directly one by one
+  app
+    ..get(
+      path: '/get',
+      index: (rq) async {
+        return rq.renderString(text: 'Hello from ${rq.method} /get request!');
+      },
+    )
+    ..postGet(
+      path: '/post',
+      index: (rq) async {
+        return rq.renderString(text: 'Hello from ${rq.method} /post request!');
+      },
+    );
+
+  Request.localEvents.addAll(localEvents);
+  Request.addLocalLayoutFilters(localLayoutFilters);
+  app.start(args).then((value) {
+    Console.p("Example app started: http://localhost:${value.port}");
+  });
+
+  /// Example Cron job
+  app.registerCron(
+    /// Evry 2 days clean the example collection of database
+    FinchCron(
+      schedule: FinchCron.evryDay(2),
+      onCron: (index, cron) async {
+        if (app.mongoDb.isConnected) {
+          ExampleCollections().deleteAll();
+        }
+      },
+      delayFirstMoment: true,
+    ).start(),
+  );
+
+  app.registerCron(
+    /// Add evry hour a new document to the example collection of database
+    FinchCron(
+      schedule: "0 * * * *",
+      onCron: (index, cron) async {
+        if (app.mongoDb.isConnected) {
+          ExampleCollections().insertExample(ExampleModel(
+            title: DateTime.now().toString(),
+            slug: 'slug-$index',
+          ));
+        }
+      },
+      delayFirstMoment: true,
+    ).start(),
+  );
+}
+```
 
 3. **Run your application**:
 

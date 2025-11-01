@@ -36,7 +36,7 @@ var env = DotEnv(includePlatformEnvironment: true)..load();
 ///   ),
 ///   enableLocalDebugger: true, // Only in development
 /// );
-/// final server = FinchServer(configs: config);
+/// final server = FinchApp(configs: config);
 /// await server.start();
 /// ```
 class FinchConfigs {
@@ -70,12 +70,12 @@ class FinchConfigs {
     List<String>? languages,
     this.mailDefault = "example@uproid.com",
     this.mailHost = "smtp.zoho.eu",
-    this.blockStart = '<?',
-    this.blockEnd = "?>",
-    this.variableStart = "<?=",
-    this.variableEnd = "?>",
-    this.commentStart = '<?#',
-    this.commentEnd = '?>',
+    this.blockStart = '{%',
+    this.blockEnd = "%}",
+    this.variableStart = "{{",
+    this.variableEnd = "}}",
+    this.commentStart = '{#',
+    this.commentEnd = '#}',
     this.cookiePassword = "password",
     FinchMysqlConfig? mysqlConfig,
     FinchSqliteConfig? sqliteConfig,
