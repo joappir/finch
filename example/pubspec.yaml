@@ -16,5 +16,5 @@ dev_dependencies:
 
 dependencies:
   finch: 
-    path: ../
+    # path: ../
   watcher:
