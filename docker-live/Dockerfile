@@ -25,7 +25,7 @@ COPY docker-live/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /www/finch/cli/bundle/ /www/app
 COPY example/public ./public
 COPY example/migrations/ /www/app/migrations/
-COPY example/migrations_sqlite/ /www/app/migrations_sqlite/
+# COPY example/migrations_sqlite/ /www/app/migrations_sqlite/
 # COPY .env .
 
 # Create .env file
