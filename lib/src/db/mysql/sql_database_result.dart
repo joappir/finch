@@ -122,19 +122,27 @@ class DatabaseDriver<T> {
     String sql, {
     bool separateStatements = false,
   }) {
-    if (separateStatements) {
-      var arrSql = splitSqlStatements(sql);
-      for (var statement in arrSql) {
-        conn.execute(statement);
+    try {
+      if (separateStatements) {
+        var arrSql = splitSqlStatements(sql);
+        for (var statement in arrSql) {
+          conn.execute(statement);
+        }
+        return SqliteResult(
+          conn,
+          ResultSet([], [], []),
+          countSqlStatements: arrSql.length,
+        );
+      } else {
+        var resultSet = conn.select(sql);
+        return SqliteResult(conn, resultSet);
       }
+    } catch (e) {
       return SqliteResult(
         conn,
         ResultSet([], [], []),
-        countSqlStatements: arrSql.length,
+        errorMsg: e.toString(),
       );
-    } else {
-      var resultSet = conn.select(sql);
-      return SqliteResult(conn, resultSet);
     }
   }
 
