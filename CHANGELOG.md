@@ -1,4 +1,16 @@
 
+## 1.5.0
+- [#75](https://github.com/uproid/finch/issues/75) Added Dart-based migrations as an alternative to SQL migration files
+  - New `DartMigration` abstract class (`up()`/`down()` build SQL via `addSql()`) with a `target` of `MigrationTarget.mysql` or `MigrationTarget.sqlite`
+  - Register migrations with `app.registerDartMigration([...])`; migration names must be unique
+  - `migrate --init`, `--rollback` and `--list` now run registered Dart migrations alongside (or instead of) file-based migrations
+- [#69](https://github.com/uproid/finch/issues/69) Migrations now run inside a database transaction, rolling back automatically if any statement fails
+  - Multi-statement migrations are executed as separate statements via a new SQL statement splitter
+- [#74](https://github.com/uproid/finch/issues/74) Removed deprecated dependencies and updated others to their latest versions
+  - Replaced `mysql_client` with `mysql_client_plus`
+  - Replaced `encrypt` with `cryptography`/`pointycastle` for `toSafe()`/`fromSafe()` AES encryption
+  - Upgraded `mongo_dart`, `mailer`, `jinja`, `intl`, `build_runner`, `test` and `sqlite3`
+
 ## 1.4.4
 - [#70](https://github.com/uproid/finch/issues/70) Fixed `FormatException: Unexpected extension byte` when request URLs contain malformed percent-encoded sequences (e.g. `/%AF/test`)
   - Added `safePathSegments` extension on `Uri` and `safeDecodeUriComponent()` helper for crash-safe decoding of path segments (invalid UTF-8 bytes are replaced with `�` instead of throwing)
