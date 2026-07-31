@@ -315,6 +315,7 @@ class MySqlResult
   @override
   final IResultSet resultSet;
 
+  @override
   final int countSqlStatements;
 
   /// Error message if the query failed, empty string if successful.

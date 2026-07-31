@@ -12,13 +12,13 @@ abstract class DartMigration {
   List<String> get upSQLs {
     _sqls.clear();
     up();
-    return _sqls;
+    return List.unmodifiable(_sqls);
   }
 
   List<String> get downSQLs {
     _sqls.clear();
     down();
-    return _sqls;
+    return List.unmodifiable(_sqls);
   }
 
   DartMigration register(FinchApp app) {

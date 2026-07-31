@@ -52,7 +52,7 @@ dependencies:
   base32: ^2.2.0
   archive: ^4.0.9
   http: ^1.6.0
-  capp: ^1.1.8
+  capp: ^2.0.0
   mysql_client_plus: ^0.1.3
   sqlite3: ^3.5.0
   sqler: ^1.2.1

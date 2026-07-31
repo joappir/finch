@@ -411,7 +411,7 @@ class FinchApp {
               CappOption(
                 name: 'sqlite',
                 shortName: 'sqlite',
-                description: 'Init SQLite migration',
+                description: 'Init SQLite and MySQL migration together',
               ),
               CappOption(
                 name: 'create',
@@ -923,9 +923,10 @@ class FinchApp {
           "Migration with name '${migration.uniqueName}'"
           " is not unique. Please ensure all migration names are unique.",
         );
+        // Exit the application with a non-zero status code to indicate an error
         exit(1);
       }
-      _dartMigrations.add(migration);
+      _dartMigrations.add(migration.register(this));
     }
 
     return this;
@@ -1233,13 +1234,12 @@ class FinchApp {
         }),
       );
       var index = 1;
-      var table = res.map((e) => [(index++).toString(), e]).toList();
+      var table = res.map((e) => [(index++).toString(), 'MySQL', e]).toList();
+      table.insert(0, ['#', 'Type', 'Migration Files']);
+
       if (table.isEmpty) {
-        table.add(['migrations to execute.']);
-      } else {
-        table.insert(0, ['#', 'Migration Files']);
+        table.add(['', '', 'migrations to execute.']);
       }
-      CappConsole.writeTable(table, color: CappColors.success);
 
       if (c.existsOption('sqlite')) {
         var res = await CappConsole.progress<List<String>>(
@@ -1250,15 +1250,14 @@ class FinchApp {
                   .toList()),
         );
         var index = 1;
-        var table = res.map((e) => [(index++).toString(), e]).toList();
+        table.addAll(
+            res.map((e) => [(index++).toString(), 'SQLite', e]).toList());
         if (table.isEmpty) {
-          table.add(['SQLITE: migrations to execute.']);
-        } else {
-          table.insert(0, ['#', 'Migration Files']);
+          table.add(['', '', 'SQLITE: migrations to execute.']);
         }
-        CappConsole.writeTable(table, color: CappColors.success);
-        return CappConsole("");
       }
+
+      CappConsole.writeTable(table, color: CappColors.success);
       return CappConsole("");
     }
 

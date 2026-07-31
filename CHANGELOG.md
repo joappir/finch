@@ -10,6 +10,7 @@
   - Replaced `mysql_client` with `mysql_client_plus`
   - Replaced `encrypt` with `cryptography`/`pointycastle` for `toSafe()`/`fromSafe()` AES encryption
   - Upgraded `mongo_dart`, `mailer`, `jinja`, `intl`, `build_runner`, `test` and `sqlite3`
+- update to `capp^2.0.0` to support for chained command execution [#3](https://github.com/uproid/capp/issues/3)
 
 ## 1.4.4
 - [#70](https://github.com/uproid/finch/issues/70) Fixed `FormatException: Unexpected extension byte` when request URLs contain malformed percent-encoded sequences (e.g. `/%AF/test`)

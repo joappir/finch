@@ -85,22 +85,22 @@ class SqliteMigration {
         if (check.exist) continue;
 
         try {
-          db.executeString('BEGIN TRANSACTION;');
+          await db.executeString('BEGIN TRANSACTION;');
           final sqls = migration.upSQLs;
           for (var sql in sqls) {
-            var res = await db.executeString(sql);
+            var res = await db.executeString(sql, separateStatements: true);
             if (res.error) {
               throw res.errorMsg;
             }
           }
-          db.executeString('COMMIT;');
+          await db.executeString('COMMIT;');
           executedFiles.add(migration.uniqueName);
           await migrationTable.insert(db, {
             'file': QVar(migration.uniqueName),
             'sort': QVar(DateTime.now().millisecondsSinceEpoch.toString()),
           });
         } catch (e) {
-          db.executeString('ROLLBACK;');
+          await db.executeString('ROLLBACK;');
           throw Exception(
             'Error executing migration: ${migration.uniqueName}\nError message: $e',
           );
@@ -120,8 +120,11 @@ class SqliteMigration {
         sqlContent = sqlContent.split('-- ## ROLL BACK:')[0];
         if (sqlContent.isEmpty) continue;
         try {
-          db.executeString('BEGIN TRANSACTION;');
-          var res = await db.executeString(sqlContent);
+          await db.executeString('BEGIN TRANSACTION;');
+          var res = await db.executeString(
+            sqlContent,
+            separateStatements: true,
+          );
           if (res.success) {
             executedFiles.add(filename);
             await migrationTable.insert(db, {
@@ -131,9 +134,9 @@ class SqliteMigration {
           } else {
             throw res.errorMsg;
           }
-          db.executeString('COMMIT;');
+          await db.executeString('COMMIT;');
         } catch (e) {
-          db.executeString('ROLLBACK;');
+          await db.executeString('ROLLBACK;');
           throw Exception(
             'Error executing migration file: $filename\nError message: $e',
           );
@@ -208,18 +211,18 @@ class SqliteMigration {
       if (rollbackContent.isEmpty) continue;
       // trans action rollback
       try {
-        db.executeString('BEGIN TRANSACTION;');
+        await db.executeString('BEGIN TRANSACTION;');
         for (var sql in rollbackContent) {
-          var res = await db.executeString(sql);
+          var res = await db.executeString(sql, separateStatements: true);
           if (res.error) {
             throw Exception(
-              'Error executing rollback for migration: $filename\nError message: ${res.errorMsg}',
+              'Error executing rollback for migration: $filename,$rollbackTarget\nError message: ${res.errorMsg}',
             );
           }
         }
-        db.executeString('COMMIT;');
+        await db.executeString('COMMIT;');
       } catch (e) {
-        db.executeString('ROLLBACK;');
+        await db.executeString('ROLLBACK;');
         rethrow;
       }
 

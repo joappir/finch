@@ -7,6 +7,7 @@ import 'package:finch/finch_mysql.dart';
 import 'package:finch/finch_sqlite.dart';
 
 abstract class SqlDatabaseResult<T, R, S> {
+  final int countSqlStatements;
   static const String countRecordsField = 'count_records';
   T database;
   final R resultSet;
@@ -15,6 +16,7 @@ abstract class SqlDatabaseResult<T, R, S> {
     required this.database,
     required this.resultSet,
     this.errorMsg = '',
+    this.countSqlStatements = 1,
   });
   bool get success;
   bool get error;
@@ -50,7 +52,8 @@ class DatabaseDriver<T> {
     bool separateStatements = false,
   }) async {
     if (database is Database) {
-      return _executeSqliteString(database as Database, sql);
+      return _executeSqliteString(database as Database, sql,
+          separateStatements: separateStatements);
     } else if (database is mysql.MySQLConnection) {
       return _executeMysqlString(
         database as mysql.MySQLConnection,
@@ -116,17 +119,22 @@ class DatabaseDriver<T> {
 
   SqliteResult _executeSqliteString(
     Database conn,
-    String sql,
-  ) {
-    try {
-      var resultSet = conn.select(sql);
-      return SqliteResult(conn, resultSet);
-    } catch (e) {
+    String sql, {
+    bool separateStatements = false,
+  }) {
+    if (separateStatements) {
+      var arrSql = splitSqlStatements(sql);
+      for (var statement in arrSql) {
+        conn.execute(statement);
+      }
       return SqliteResult(
         conn,
         ResultSet([], [], []),
-        errorMsg: e.toString(),
+        countSqlStatements: arrSql.length,
       );
+    } else {
+      var resultSet = conn.select(sql);
+      return SqliteResult(conn, resultSet);
     }
   }
 

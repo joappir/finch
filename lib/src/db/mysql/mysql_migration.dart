@@ -82,23 +82,30 @@ class MysqlMigration {
     var executedFiles = <String>[];
     if (migrations.isNotEmpty) {
       for (var migration in migrations) {
+        await db.executeString('START TRANSACTION;');
         var check = await _checkExcutedMigration(migration.uniqueName);
         if (check.exist) continue;
 
-        final sqls = migration.upSQLs;
-        for (var sql in sqls) {
-          var res = await db.executeString(sql, separateStatements: true);
-          if (res.error) {
-            throw Exception(
-              'Error executing migration: ${migration.uniqueName}\nError message: ${res.errorMsg}',
-            );
+        try {
+          final sqls = migration.upSQLs;
+          for (var sql in sqls) {
+            var res = await db.executeString(sql, separateStatements: true);
+            if (res.error) {
+              throw res.errorMsg;
+            }
           }
+          await db.executeString('COMMIT;');
+          executedFiles.add(migration.uniqueName);
+          await migrationTable.insert(db, {
+            'file': QVar(migration.uniqueName),
+            'sort': QVar(DateTime.now().millisecondsSinceEpoch.toString()),
+          });
+        } catch (e) {
+          await db.executeString('ROLLBACK;');
+          throw Exception(
+            'Error executing migration: ${migration.uniqueName}\nError message: \n$e',
+          );
         }
-        executedFiles.add(migration.uniqueName);
-        await migrationTable.insert(db, {
-          'file': QVar(migration.uniqueName),
-          'sort': QVar(DateTime.now().millisecondsSinceEpoch.toString()),
-        });
       }
     } else if (files.isEmpty) {
       throw Exception(
@@ -125,6 +132,7 @@ class MysqlMigration {
               'file': QVar(filename),
               'sort': QVar(DateTime.now().millisecondsSinceEpoch.toString()),
             });
+            await db.executeString('COMMIT;');
           } else {
             throw res.errorMsg;
           }
@@ -204,13 +212,20 @@ class MysqlMigration {
       if (rollbackContent.isEmpty) continue;
 
       for (var sql in rollbackContent) {
-        var res = await db.executeString(
-          sql,
-          separateStatements: true,
-        );
-        if (res.error) {
+        await db.executeString('START TRANSACTION;');
+        try {
+          var res = await db.executeString(
+            sql,
+            separateStatements: true,
+          );
+          if (res.error) {
+            throw res.errorMsg;
+          }
+          await db.executeString('COMMIT;');
+        } catch (e) {
+          await db.executeString('ROLLBACK;');
           throw Exception(
-            'Error executing rollback for migration: $filename\nError message: ${res.errorMsg}',
+            'Error executing rollback for migration: $filename\nError message: $e',
           );
         }
       }

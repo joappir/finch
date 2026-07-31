@@ -182,8 +182,13 @@ extension SafeString on String {
   }
 
   Uint8List _pkcs7Unpad(Uint8List data) {
+    if (data.isEmpty) {
+      throw const FormatException('Invalid padding');
+    }
     final last = data.last;
-
+    if (last < 1 || last > data.length) {
+      throw const FormatException('Invalid padding');
+    }
     return data.sublist(
       0,
       data.length - last,
