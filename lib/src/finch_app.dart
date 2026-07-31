@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:capp/capp.dart';
+import 'package:finch/mysql.dart';
 import 'package:finch/src/cli/commands/commands.dart';
 import 'package:finch/src/tools/convertor/widget_to_dart.dart';
 import 'package:finch/src/tools/convertor/language_to_dart.dart';
-import 'package:mysql_client/mysql_client.dart';
+import 'package:mysql_client_plus/mysql_client_plus.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:finch/src/db/mysql/mysql_migration.dart';
-import 'package:finch/src/db/mysql/sql_database_result.dart';
 import 'package:finch/src/db/mysql/sqlite_migration.dart';
 import 'package:finch/src/widgets/widget_console.dart';
-import 'package:finch/finch_mysql.dart';
 import 'package:finch/finch_route.dart';
 import 'package:finch/finch_app.dart';
 import 'package:finch/src/tools/console.dart';
@@ -398,9 +397,7 @@ class FinchApp {
                 description: 'Show help',
               ),
             ],
-            run: (c) async {
-              return c.manager.writeHelpModern(c.manager.controllers);
-            },
+            run: (c) async => c.manager.writeHelpModern(c.manager.controllers),
           ),
           CappController(
             'migrate',
@@ -439,96 +436,7 @@ class FinchApp {
               ),
             ],
             description: 'Mysql/Sqlite Migration commands',
-            run: (c) async {
-              if (c.existsOption('init')) {
-                var res = await CappConsole.progress<List<String>>(
-                  "Initializing migration...",
-                  () async =>
-                      MysqlMigration(mysqlDriver).migrateInit().catchError((e) {
-                    CappConsole.write(
-                      "\n\n$e\n",
-                      CappColors.error,
-                    );
-                    return <String>[];
-                  }),
-                );
-                var index = 1;
-                var table = res.map((e) => [(index++).toString(), e]).toList();
-                if (table.isEmpty) {
-                  table.add(['migrations to execute.']);
-                } else {
-                  table.insert(0, ['#', 'Migration Files']);
-                }
-                CappConsole.writeTable(table, color: CappColors.success);
-
-                if (c.existsOption('sqlite')) {
-                  var res = await CappConsole.progress<List<String>>(
-                    "Initializing migration...",
-                    () async => SqliteMigration(sqliteDriver).migrateInit(),
-                  );
-                  var index = 1;
-                  var table =
-                      res.map((e) => [(index++).toString(), e]).toList();
-                  if (table.isEmpty) {
-                    table.add(['SQLITE: migrations to execute.']);
-                  } else {
-                    table.insert(0, ['#', 'Migration Files']);
-                  }
-                  CappConsole.writeTable(table, color: CappColors.success);
-                  return CappConsole("");
-                }
-                return CappConsole("");
-              }
-
-              if (c.existsOption('create')) {
-                var name = "";
-                if (c.existsOption('name')) {
-                  name = c.getOption('name');
-                } else {
-                  name = CappConsole.read(
-                    "Enter name of migration: ",
-                    isRequired: true,
-                  );
-                }
-
-                var res = await CappConsole.progress<String>(
-                  "Creating migration...",
-                  () async => MysqlMigration.migrateCreate(name: name),
-                );
-                return CappConsole(res);
-              }
-
-              if (c.existsOption('rollback')) {
-                int deep = c.getOption('rollback', def: '1').toInt(def: 1);
-                var res = await CappConsole.progress<String>(
-                  "Rolling back migration...",
-                  () async => MysqlMigration(mysqlDriver)
-                      .migrateRollback(deep)
-                      .catchError((e) {
-                    CappConsole.write(
-                      "\n\n$e\n",
-                      CappColors.error,
-                    );
-                    return "Error rolling back migration";
-                  }),
-                );
-                return CappConsole(res);
-              }
-
-              if (c.existsOption('list')) {
-                var res =
-                    await MysqlMigration(mysqlDriver).checkMigrationStatus();
-                res.insert(
-                    0, ["#", 'Migration Files', 'Executed', 'Created At']);
-                CappConsole.writeTable(res, color: CappColors.success);
-                return CappConsole("");
-              }
-
-              return CappConsole(
-                "Please run the migration commands",
-                CappColors.warning,
-              );
-            },
+            run: _migrateCommand,
           ),
           CappController(
             'build_widgets',
@@ -627,19 +535,31 @@ class FinchApp {
             ],
             run: (c) async {
               if (c.existsOption('init')) {
-                var res = await CappConsole.progress<List<String>>(
-                  "Initializing migration...",
-                  () async => SqliteMigration(sqliteDriver).migrateInit(),
-                );
-                var index = 1;
-                var table = res.map((e) => [(index++).toString(), e]).toList();
-                if (table.isEmpty) {
-                  table.add(['No migrations to execute.']);
-                } else {
-                  table.insert(0, ['#', 'Migration Files']);
+                try {
+                  var res = await CappConsole.progress<List<String>>(
+                    "Initializing migration...",
+                    () async => SqliteMigration(sqliteDriver).migrateInit(
+                        migrations: _dartMigrations
+                            .where((m) => m.target == MigrationTarget.sqlite)
+                            .toList()),
+                  );
+                  var index = 1;
+                  var table =
+                      res.map((e) => [(index++).toString(), e]).toList();
+                  if (table.isEmpty) {
+                    table.add(['No migrations to execute.']);
+                  } else {
+                    table.insert(0, ['#', 'Migration Files']);
+                  }
+                  CappConsole.writeTable(
+                    table,
+                    color: CappColors.success,
+                  );
+                } catch (e) {
+                  await _commandListSqliteMigrations(c, CappColors.error);
+                  CappConsole.write(e, CappColors.error);
                 }
-                CappConsole.writeTable(table, color: CappColors.success);
-                return CappConsole("");
+                return CappConsole.empty;
               }
 
               if (c.existsOption('create')) {
@@ -663,21 +583,37 @@ class FinchApp {
 
               if (c.existsOption('rollback')) {
                 int deep = c.getOption('rollback', def: '1').toInt(def: 1);
-                var res = await CappConsole.progress<String>(
+                var res = await CappConsole.progress<List<String>>(
                   "Rolling back migration...",
-                  () async =>
-                      SqliteMigration(sqliteDriver).migrateRollback(deep),
+                  () async => SqliteMigration(sqliteDriver).migrateRollback(
+                      deep,
+                      dartMigrations: _dartMigrations
+                          .where((m) => m.target == MigrationTarget.sqlite)
+                          .toList()),
+                ).catchError((e) {
+                  CappConsole.write(
+                    "\n\n$e\n",
+                    CappColors.error,
+                  );
+                  return <String>[];
+                });
+
+                CappConsole.writeTable(
+                  [
+                    ['#', 'Migration Files'],
+                    ...res
+                        .asMap()
+                        .entries
+                        .map((e) => [(e.key + 1).toString(), e.value]),
+                  ],
+                  color: CappColors.warning,
                 );
-                return CappConsole(res);
+
+                return CappConsole.empty;
               }
 
               if (c.existsOption('list')) {
-                var res =
-                    await SqliteMigration(sqliteDriver).checkMigrationStatus();
-                res.insert(
-                    0, ["#", 'Migration Files', 'Executed', 'Created At']);
-                CappConsole.writeTable(res, color: CappColors.success);
-                return CappConsole("");
+                return _commandListSqliteMigrations(c);
               }
 
               return CappConsole(
@@ -975,6 +911,28 @@ class FinchApp {
   /// when [debuggerInit] is called multiple times.
   var _isDebuggerInit = false;
 
+  FinchApp registerDartMigration(List<DartMigration> migrations) {
+    // validate unique migration names
+    for (var migration in migrations) {
+      if (_dartMigrations
+          .where((m) => m.uniqueName == migration.uniqueName)
+          .isNotEmpty) {
+        Console.e(
+          "Application Error: \n"
+          "Class: $migration\n"
+          "Migration with name '${migration.uniqueName}'"
+          " is not unique. Please ensure all migration names are unique.",
+        );
+        exit(1);
+      }
+      _dartMigrations.add(migration);
+    }
+
+    return this;
+  }
+
+  final List<DartMigration> _dartMigrations = [];
+
   /// Initializes the local development debugger system.
   /// Sets up a WebSocket-based debugging interface that provides:
   /// - Real-time route inspection and listing
@@ -1240,6 +1198,133 @@ class FinchApp {
       key: key,
       params: params,
       permissions: permissions,
+    );
+  }
+
+  // Commands
+  Future<CappConsole> _commandListSqliteMigrations(
+    CappController c, [
+    CappColors color = CappColors.success,
+  ]) async {
+    var res = await SqliteMigration(sqliteDriver).checkMigrationStatus(
+        migrations: _dartMigrations
+            .where((m) => m.target == MigrationTarget.sqlite)
+            .toList());
+    res.insert(0, ["#", 'Migration Files', 'Executed', 'Created At']);
+    CappConsole.writeTable(res, color: color);
+    return CappConsole.empty;
+  }
+
+  Future<CappConsole> _migrateCommand(CappController c) async {
+    if (c.existsOption('init')) {
+      var res = await CappConsole.progress<List<String>>(
+        "Initializing migration...",
+        () async => MysqlMigration(mysqlDriver)
+            .migrateInit(
+                migrations: _dartMigrations
+                    .where((m) => m.target == MigrationTarget.mysql)
+                    .toList())
+            .catchError((e) {
+          CappConsole.write(
+            "\n\n$e\n",
+            CappColors.error,
+          );
+          return <String>[];
+        }),
+      );
+      var index = 1;
+      var table = res.map((e) => [(index++).toString(), e]).toList();
+      if (table.isEmpty) {
+        table.add(['migrations to execute.']);
+      } else {
+        table.insert(0, ['#', 'Migration Files']);
+      }
+      CappConsole.writeTable(table, color: CappColors.success);
+
+      if (c.existsOption('sqlite')) {
+        var res = await CappConsole.progress<List<String>>(
+          "Initializing migration...",
+          () async => SqliteMigration(sqliteDriver).migrateInit(
+              migrations: _dartMigrations
+                  .where((m) => m.target == MigrationTarget.sqlite)
+                  .toList()),
+        );
+        var index = 1;
+        var table = res.map((e) => [(index++).toString(), e]).toList();
+        if (table.isEmpty) {
+          table.add(['SQLITE: migrations to execute.']);
+        } else {
+          table.insert(0, ['#', 'Migration Files']);
+        }
+        CappConsole.writeTable(table, color: CappColors.success);
+        return CappConsole("");
+      }
+      return CappConsole("");
+    }
+
+    if (c.existsOption('create')) {
+      var name = "";
+      if (c.existsOption('name')) {
+        name = c.getOption('name');
+      } else {
+        name = CappConsole.read(
+          "Enter name of migration: ",
+          isRequired: true,
+        );
+      }
+
+      var res = await CappConsole.progress<String>(
+        "Creating migration...",
+        () async => MysqlMigration.migrateCreate(name: name),
+      );
+      return CappConsole(res);
+    }
+
+    if (c.existsOption('rollback')) {
+      int deep = c.getOption('rollback', def: '1').toInt(def: 1);
+      var res = await CappConsole.progress<List<String>>(
+        "Rolling back migration...",
+        () async => MysqlMigration(mysqlDriver)
+            .migrateRollback(deep,
+                dartMigrations: _dartMigrations
+                    .where((m) => m.target == MigrationTarget.mysql)
+                    .toList())
+            .catchError((e) {
+          CappConsole.write(
+            "\n\n$e\n",
+            CappColors.error,
+          );
+          return <String>[];
+        }),
+      );
+      CappConsole.writeTable(
+        [
+          ['#', 'Migration Files'],
+          ...res
+              .toList()
+              .asMap()
+              .entries
+              .map((e) => [(e.key + 1).toString(), e.value])
+        ],
+        color: CappColors.warning,
+      );
+
+      return CappConsole.empty;
+    }
+
+    if (c.existsOption('list')) {
+      var res = await MysqlMigration(mysqlDriver).checkMigrationStatus(
+          migrations: _dartMigrations
+              .where((m) => m.target == MigrationTarget.mysql)
+              .toList());
+      res.insert(0, ["#", 'Migration Files', 'Executed', 'Created At']);
+      CappConsole.writeTable(res, color: CappColors.success);
+      return CappConsole("");
+    }
+
+    return CappConsole(
+      "Please run the migration commands",
+      CappColors.warning,
     );
   }
 }
