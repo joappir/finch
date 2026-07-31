@@ -1,8 +1,8 @@
-import 'package:example/core/configs.dart';
-import 'package:example/dart_migration/sqlite1_create_database.dart';
-import 'package:example/dart_migration/sqlite2_insert_database.dart';
-import 'package:example/dart_migration/sqlite3_fix_database.dart';
-import 'package:example/dart_migration/sqlite4_insert_database.dart';
+import 'core/configs.dart';
+import 'dart_migration/sqlite1_create_database.dart';
+import 'dart_migration/sqlite2_insert_database.dart';
+import 'dart_migration/sqlite3_fix_database.dart';
+import 'dart_migration/sqlite4_insert_database.dart';
 import 'core/local_events.dart';
 import 'package:finch/finch_route.dart';
 import 'db/job_collection_free.dart';

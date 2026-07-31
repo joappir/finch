@@ -1,6 +1,6 @@
-import 'package:example/core/error_custom_view.dart';
-import 'package:example/languages/language_dart.g.dart';
-import 'package:example/widgets/widget_dart.g.dart';
+import '../core/error_custom_view.dart';
+import '../languages/language_dart.g.dart';
+import '../widgets/widget_dart.g.dart';
 import 'package:finch/finch_app.dart';
 import 'package:finch/finch_model.dart';
 import 'package:finch/finch_tools.dart';

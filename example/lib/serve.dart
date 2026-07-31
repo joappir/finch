@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:async';
-import 'package:example/core/configs.dart';
+import './core/configs.dart';
 import 'package:finch/console.dart';
 import 'package:finch/finch_app.dart';
 import 'app.dart' as app;
