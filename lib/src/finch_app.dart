@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:capp/capp.dart';
 import 'package:finch/mysql.dart';
@@ -389,6 +390,31 @@ class FinchApp {
             },
           ),
           CappController(
+            'request',
+            options: [
+              _helpOption,
+              CappOption(
+                name: 'path',
+                shortName: 'p',
+                description: 'Request path',
+                value: '/',
+              ),
+            ],
+            description: 'request path and get response',
+            run: (c) async {
+              var path = c.getOption('path', def: '/');
+
+              var res = await HttpClient()
+                  .getUrl(Uri.parse("${config.uri}$path"))
+                  .then((request) => request.close())
+                  .then((response) => response.transform(utf8.decoder).join());
+
+              Console.json(FinchJson.tryJson(res) ?? res);
+
+              return CappConsole.empty;
+            },
+          ),
+          CappController(
             'help',
             options: [
               CappOption(
@@ -771,6 +797,29 @@ class FinchApp {
                 name: 'path',
                 shortName: 'p',
                 description: 'Path of middleware (default: ./lib/middleware/)',
+              ),
+            ],
+          ),
+          CappController(
+            'make:migration',
+            description: 'Make new migration',
+            run: (c) => ProjectCommands().createMigrateFile(c),
+            options: [
+              CappOption(
+                name: 'name',
+                shortName: 'n',
+                description: 'Name of migration',
+              ),
+              CappOption(
+                name: 'path',
+                shortName: 'p',
+                description: 'Path of migration (default: ./lib/migrations/)',
+              ),
+              CappOption(
+                name: 'sqlite',
+                shortName: 's',
+                description: 'Create migration for SQLite',
+                value: 'sqlite',
               ),
             ],
           ),
