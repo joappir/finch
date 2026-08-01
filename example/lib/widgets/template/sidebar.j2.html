@@ -105,6 +105,16 @@
           <span class="flex-1 truncate">{{ $t('sidebar.socketExample') }}</span>
         </a>
 
+        {% set isMeetingActive = $e.hasKey(['root.meeting']) %}
+        <a href="{{ $e.routeUrl('root.meeting') }}" class="wave group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 {{ 'bg-gradient-to-r from-teal-50 via-cyan-50 to-white text-teal-700 font-semibold ring-1 ring-teal-200/70 shadow-sm' if isMeetingActive else 'text-zinc-600 hover:bg-zinc-50 hover:text-teal-700' }}">
+          {% if isMeetingActive %}<span class="absolute inset-y-2 {{ 'right-0' if dir=='rtl' else 'left-0' }} w-1 rounded-full bg-gradient-to-b from-teal-500 to-cyan-500"></span>{% endif %}
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 {{ 'bg-gradient-to-br from-rose-500 to-fuchsia-600 text-white shadow-md shadow-rose-500/30' if isMeetingActive else 'bg-zinc-100 text-zinc-500 group-hover:bg-rose-100 group-hover:text-rose-600' }}">
+            <i class="fa-solid fa-video text-sm"></i>
+          </span>
+          <span class="flex-1 truncate">{{ $t('sidebar.meetingExample') }}</span>
+          <span class="inline-flex items-center rounded-full bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-600 ring-1 ring-rose-300/60">New</span>
+        </a>
+
         {% set isEmailActive = $e.hasKey(['root.email','root.email.post']) %}
         <a href="{{ $e.routeUrl('root.email') }}" class="wave group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 {{ 'bg-gradient-to-r from-teal-50 via-cyan-50 to-white text-teal-700 font-semibold ring-1 ring-teal-200/70 shadow-sm' if isEmailActive else 'text-zinc-600 hover:bg-zinc-50 hover:text-teal-700' }}">
           {% if isEmailActive %}<span class="absolute inset-y-2 {{ 'right-0' if dir=='rtl' else 'left-0' }} w-1 rounded-full bg-gradient-to-b from-teal-500 to-cyan-500"></span>{% endif %}

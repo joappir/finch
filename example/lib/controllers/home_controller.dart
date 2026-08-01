@@ -147,6 +147,10 @@ class HomeController extends Controller {
     return renderTemplate('example/socket');
   }
 
+  Future<String> exampleMeeting() async {
+    return renderTemplate('example/meeting');
+  }
+
   Future<String> exampleDatabase() async {
     var action = rq.get<String>('action', def: '');
     var page = rq.get<int>('page', def: 0);

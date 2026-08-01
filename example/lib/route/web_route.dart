@@ -132,6 +132,12 @@ Future<List<FinchRoute>> getWebRoute(Request rq) async {
           index: homeController.exampleSocket,
         ),
         FinchRoute(
+          key: 'root.meeting',
+          path: 'meeting',
+          methods: Methods.ONLY_GET,
+          index: homeController.exampleMeeting,
+        ),
+        FinchRoute(
           key: 'root.email',
           path: 'email',
           methods: Methods.ONLY_GET,
