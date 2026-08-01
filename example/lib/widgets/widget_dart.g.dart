@@ -4535,7 +4535,7 @@ $t('sidebar.info') }}
   <div class="flex h-full w-full items-center">
 
     <!-- ============ BRAND ZONE (aligned with sidebar width on lg) ============ -->
-    <div class="flex h-full w-[240px] shrink-0 items-center gap-2 border-zinc-200 px-4 lg:border-e">
+    <div class="flex h-full w-[240px] shrink-0 items-center gap-2 border-zinc-200 px-4">
       <!-- Mobile-only sidebar toggle -->
       <button
         type="button"
