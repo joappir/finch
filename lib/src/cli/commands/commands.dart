@@ -548,6 +548,7 @@ class ProjectCommands {
         name: name,
         migrationPath: path,
       ),
+      type: CappProgressType.circle,
     );
     return CappConsole(res);
   }
@@ -642,6 +643,7 @@ class ProjectCommands {
     var res = await CappConsole.progress<String>(
       "Creating controller...",
       () async => MakeController.make(name, path),
+      type: CappProgressType.circle,
     );
     return CappConsole(res, CappColors.success);
   }
@@ -660,6 +662,7 @@ class ProjectCommands {
     var res = await CappConsole.progress<String>(
       "Creating service...",
       () async => MakeService.make(name, path),
+      type: CappProgressType.circle,
     );
     return CappConsole(res, CappColors.success);
   }
@@ -678,6 +681,7 @@ class ProjectCommands {
     var res = await CappConsole.progress<String>(
       "Creating middleware...",
       () async => MakeMiddleware.make(name, path),
+      type: CappProgressType.circle,
     );
     return CappConsole(res, CappColors.success);
   }

@@ -1,3 +1,5 @@
+import 'package:finch/finch_console.dart';
+
 import '../app.dart';
 import '../db/mysql/mysql_books.dart';
 import 'package:finch/finch_model_less.dart';
@@ -83,6 +85,25 @@ class McpServerBooksController extends McpServerController {
       ),
     );
 
+    // Delete books tool example:
+    mcp.tool(
+      name: 'get_one_book',
+      handler: _getOneBook,
+      description: 'Retrieves a book by its ID',
+      inputSchema: ToolSchema(
+        type: 'object',
+        properties: {
+          'id': Schema(
+            type: 'string',
+            description: 'The ID of the book to retrieve',
+            defaultValue: '',
+            title: 'Book ID',
+          ),
+        },
+        required: ['id'],
+      ),
+    );
+
     // Insert new book tool example:
     mcp.tool(
       name: 'insert_new_book',
@@ -90,7 +111,7 @@ class McpServerBooksController extends McpServerController {
       description: 'Inserts a new book into the database',
       inputSchema: ToolSchema(
         type: 'object',
-        properties: bookSchema..remove('id'),
+        properties: {...bookSchema}..remove('id'),
         required: ['title', 'author', 'published_year'],
       ),
       outputSchema: ToolSchema(
@@ -104,6 +125,29 @@ class McpServerBooksController extends McpServerController {
           ),
         },
         required: ['id'],
+      ),
+    );
+
+    // Update a book tool example:
+    mcp.tool(
+      name: 'update_book',
+      handler: _updateBook,
+      description: 'Updates an existing book in the database',
+      inputSchema: ToolSchema(
+        type: 'object',
+        properties: bookSchema,
+        required: ['id', 'title', 'author', 'published_year'],
+      ),
+      outputSchema: ToolSchema(
+        type: 'object',
+        properties: {
+          'id': Schema(
+            type: 'string',
+            description: 'The ID of the updated book',
+            defaultValue: '',
+            title: 'Book ID',
+          ),
+        },
       ),
     );
   }
@@ -128,6 +172,32 @@ class McpServerBooksController extends McpServerController {
       content: [],
       structuredContent: {
         'id': result.insertId.toString(),
+      },
+    );
+  }
+
+  Future<CallToolResult> _updateBook(CallToolRequest request) async {
+    var title = request.params.arguments!['title'].asString(def: '');
+    var author = request.params.arguments!['author'].asString(def: '');
+    var publishedYear =
+        request.params.arguments!['published_year'].asString(def: '2026');
+
+    var bookId = request.params.arguments!['id'].asString(def: '-1');
+
+    var result = await mysqlBooks.updateBook(
+      id: bookId,
+      title: title,
+      author: author,
+      publishedDate: publishedYear,
+    );
+
+    if (result.error) {
+      throw Exception('Failed to update book: ${result.errorMsg}');
+    }
+    return CallToolResult(
+      content: [],
+      structuredContent: {
+        'id': bookId,
       },
     );
   }
@@ -163,6 +233,20 @@ class McpServerBooksController extends McpServerController {
 
     return CallToolResult(content: [], structuredContent: {
       'books': structableContent,
+    });
+  }
+
+  Future<CallToolResult> _getOneBook(CallToolRequest request) async {
+    var bookId = request.params.arguments!['id'].asString(def: '-1');
+
+    var book = await mysqlBooks.getBookById(bookId);
+
+    if (book == null) {
+      throw Exception('Book not found with id: $bookId');
+    }
+
+    return CallToolResult(content: [], structuredContent: {
+      'book': book,
     });
   }
 }

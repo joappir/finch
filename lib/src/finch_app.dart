@@ -568,6 +568,7 @@ class FinchApp {
                         migrations: _dartMigrations
                             .where((m) => m.target == MigrationTarget.sqlite)
                             .toList()),
+                    type: CappProgressType.circle,
                   );
                   var index = 1;
                   var table =
@@ -603,6 +604,7 @@ class FinchApp {
                   "Creating migration...",
                   () async =>
                       SqliteMigration(sqliteDriver).migrateCreate(name: name),
+                  type: CappProgressType.circle,
                 );
                 return CappConsole(res);
               }
@@ -616,6 +618,7 @@ class FinchApp {
                       dartMigrations: _dartMigrations
                           .where((m) => m.target == MigrationTarget.sqlite)
                           .toList()),
+                  type: CappProgressType.circle,
                 ).catchError((e) {
                   CappConsole.write(
                     "\n\n$e\n",
@@ -696,6 +699,7 @@ class FinchApp {
                     ).init();
                     return appLanguages.length.toString();
                   },
+                  type: CappProgressType.circle,
                 );
                 return CappConsole("Count of languages: $res");
               }
@@ -1281,6 +1285,7 @@ class FinchApp {
           );
           return <String>[];
         }),
+        type: CappProgressType.circle,
       );
       var index = 1;
       var table = res.map((e) => [(index++).toString(), 'MySQL', e]).toList();
@@ -1297,6 +1302,7 @@ class FinchApp {
               migrations: _dartMigrations
                   .where((m) => m.target == MigrationTarget.sqlite)
                   .toList()),
+          type: CappProgressType.circle,
         );
         var index = 1;
         table.addAll(
@@ -1324,6 +1330,7 @@ class FinchApp {
       var res = await CappConsole.progress<String>(
         "Creating migration...",
         () async => MysqlMigration.migrateCreate(name: name),
+        type: CappProgressType.circle,
       );
       return CappConsole(res);
     }
@@ -1344,6 +1351,7 @@ class FinchApp {
           );
           return <String>[];
         }),
+        type: CappProgressType.circle,
       );
       CappConsole.writeTable(
         [
