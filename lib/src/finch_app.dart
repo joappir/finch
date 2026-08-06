@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:capp/capp.dart';
 import 'package:finch/mysql.dart';
@@ -386,31 +385,6 @@ class FinchApp {
             description: 'Clear console',
             run: (c) async {
               CappConsole.clear();
-              return CappConsole.empty;
-            },
-          ),
-          CappController(
-            'request',
-            options: [
-              _helpOption,
-              CappOption(
-                name: 'path',
-                shortName: 'p',
-                description: 'Request path',
-                value: '/',
-              ),
-            ],
-            description: 'request path and get response',
-            run: (c) async {
-              var path = c.getOption('path', def: '/');
-
-              var res = await HttpClient()
-                  .getUrl(Uri.parse("${config.uri}$path"))
-                  .then((request) => request.close())
-                  .then((response) => response.transform(utf8.decoder).join());
-
-              Console.json(FinchJson.tryJson(res) ?? res);
-
               return CappConsole.empty;
             },
           ),
@@ -1347,5 +1321,5 @@ class _Info {
   /// - MINOR: New features (backward compatible)
   /// - PATCH: Bug fixes (backward compatible)
   /// - PRERELEASE: Pre-release identifiers (alpha, beta, rc)
-  final String version = '1.5.0';
+  final String version = '1.5.1';
 }

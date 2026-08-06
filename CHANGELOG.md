@@ -1,4 +1,16 @@
 
+## 1.5.1
+- Upgraded MCP support to MCP 2.0 (`mcp_models: 2.0.0`): replaced `initialize`/`notifications/initialized` handling with the new `server/discover` method and `DiscoverResult` response
+- Added `make:migration` command to create SQL or Dart migration files from the CLI
+  - `finch make:migration --name create_users_table`
+  - `finch make:migration --name create_users_table --sqlite`
+- Removed the `--create` option from `migrate`/`migrate_sqlite`; use `make:migration` instead
+- Improved the Finch CLI runtime console with command history, arrow-key navigation and line editing (press `h` to view history)
+- Fixed public file serving to reject requests resolving outside the public directory
+- Removed the `cryptography` package dependency
+- Updated dependencies: `capp` to `^2.1.0`, `mcp_models` to `2.0.0`
+- Added a new real-time "Meeting Room" example (WebSocket-based)
+
 ## 1.5.0
 - [#75](https://github.com/uproid/finch/issues/75) Added Dart-based migrations as an alternative to SQL migration files
   - New `DartMigration` abstract class (`up()`/`down()` build SQL via `addSql()`) with a `target` of `MigrationTarget.mysql` or `MigrationTarget.sqlite`
