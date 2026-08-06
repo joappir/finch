@@ -440,11 +440,6 @@ class FinchApp {
                 description: 'Init SQLite and MySQL migration together',
               ),
               CappOption(
-                name: 'create',
-                shortName: 'c',
-                description: 'Create migration',
-              ),
-              CappOption(
                 name: 'name',
                 shortName: 'n',
                 description: 'Name of migration file while creating',
@@ -538,11 +533,6 @@ class FinchApp {
                 description: 'Init migration',
               ),
               CappOption(
-                name: 'create',
-                shortName: 'c',
-                description: 'Create migration',
-              ),
-              CappOption(
                 name: 'name',
                 shortName: 'n',
                 description: 'Name of migration file while creating',
@@ -587,26 +577,6 @@ class FinchApp {
                   CappConsole.write(e, CappColors.error);
                 }
                 return CappConsole.empty;
-              }
-
-              if (c.existsOption('create')) {
-                var name = "";
-                if (c.existsOption('name')) {
-                  name = c.getOption('name');
-                } else {
-                  name = CappConsole.read(
-                    "Enter name of migration: ",
-                    isRequired: true,
-                  );
-                }
-
-                var res = await CappConsole.progress<String>(
-                  "Creating migration...",
-                  () async =>
-                      SqliteMigration(sqliteDriver).migrateCreate(name: name),
-                  type: CappProgressType.circle,
-                );
-                return CappConsole(res);
               }
 
               if (c.existsOption('rollback')) {
@@ -1314,25 +1284,6 @@ class FinchApp {
 
       CappConsole.writeTable(table, color: CappColors.success);
       return CappConsole("");
-    }
-
-    if (c.existsOption('create')) {
-      var name = "";
-      if (c.existsOption('name')) {
-        name = c.getOption('name');
-      } else {
-        name = CappConsole.read(
-          "Enter name of migration: ",
-          isRequired: true,
-        );
-      }
-
-      var res = await CappConsole.progress<String>(
-        "Creating migration...",
-        () async => MysqlMigration.migrateCreate(name: name),
-        type: CappProgressType.circle,
-      );
-      return CappConsole(res);
     }
 
     if (c.existsOption('rollback')) {

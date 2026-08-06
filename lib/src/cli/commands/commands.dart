@@ -527,6 +527,10 @@ class ProjectCommands {
     var defaultMigratePath = _pubspec(
       isSqlite ? 'sqlite_migrate/path' : 'mysql_migrate/path',
     );
+    var type = _pubspec(
+      isSqlite ? 'sqlite_migrate/type' : 'mysql_migrate/type',
+      def: 'sql',
+    );
     var path = c.getOption('path', def: defaultMigratePath);
 
     if (path.isEmpty) {
@@ -547,6 +551,8 @@ class ProjectCommands {
       () async => MysqlMigration.migrateCreate(
         name: name,
         migrationPath: path,
+        type: type,
+        isSqlite: isSqlite,
       ),
       type: CappProgressType.circle,
     );

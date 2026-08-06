@@ -257,23 +257,25 @@ class MysqlMigration {
   static Future<String> migrateCreate({
     String name = '',
     String? migrationPath,
+    bool isSqlite = false,
+    String type = 'sql',
   }) async {
     File file = File(
       path.join(
         migrationPath ?? pathTo(FinchApp.config.pathMigrationMySQL),
-        '${DateTime.now().millisecondsSinceEpoch}_'
+        'z${DateTime.now().millisecondsSinceEpoch}_'
         '${name.isNotEmpty ? '${name.toSlug().replaceAll('-', '_')}_' : ''}'
-        'migration.sql',
+        'migration.$type',
       ),
     );
 
     file.createSync(recursive: true);
     file.writeAsString(
-      '-- ${DateTime.now()} \n'
-      '-- MySQL Migration File \n'
-      '${name.isNotEmpty ? '-- Name: $name \n' : ''}'
-      '-- ## NEW VERSION:\n\n\n\n'
-      '-- ## ROLL BACK:\n\n\n\n',
+      _getMigrationTemplate(
+        name: name,
+        isSqlite: isSqlite,
+        type: type,
+      ),
     );
     CappConsole.write("\n");
     CappConsole.writeTable(
@@ -284,7 +286,9 @@ class MysqlMigration {
       dubleBorder: true,
       color: CappColors.success,
     );
-    return 'Create migration file command executed successfully.';
+    return 'Create migration file command executed successfully.\n'
+        'Register this migration file in your FinchApp '
+        'instance using the registerDartMigration method.';
   }
 
   /// Checks if a migration file has already been executed.
@@ -366,5 +370,44 @@ class MysqlMigration {
       }
     }
     return statusList;
+  }
+
+  static String _getMigrationTemplate({
+    required String name,
+    bool isSqlite = false,
+    String type = 'sql',
+  }) {
+    if (type.trim() != 'dart') {
+      return '-- ${DateTime.now()} \n'
+          '-- ${isSqlite ? 'SQLite' : 'MySQL'} Migration File \n'
+          '${name.isNotEmpty ? '-- Name: $name \n' : ''}'
+          '-- ## NEW VERSION:\n\n\n\n'
+          '-- ## ROLL BACK:\n\n\n\n';
+    } else {
+      return '''import 'package:finch/${isSqlite ? 'sqlite' : 'mysql'}.dart';
+/// A Dart migration class for ${isSqlite ? 'SQLite' : 'MySQL'} database migrations.
+/// Create at: ${DateTime.now()}
+/// Name: $name
+/// @TODO Important: Create a new instance of this class into registerDartMigration method in your FinchApp instance.
+class M${name.toSlug().toPascalCase()} extends DartMigration {
+  @override
+  MigrationTarget get target => MigrationTarget.${isSqlite ? 'sqlite' : 'mysql'};
+
+  M${name.toSlug().toPascalCase()}() : super('migrate_${name.toSlug()}_${DateTime.now().millisecondsSinceEpoch}');
+
+  @override
+  void up() {
+    /// @TODO: Add your migration SQL statements here
+    addSql('');
+  }
+
+  @override
+  void down() {
+    /// @TODO: Add your migration rollback SQL statements here
+    addSql('');
+  }
+}
+''';
+    }
   }
 }
