@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:finch/finch_route.dart';
 import '../finch_app.dart';
 import 'package:mime/mime.dart';
+import 'package:path/path.dart' as p;
 import '../tools/path.dart';
 
 /// A comprehensive route management and request processing system for web applications.
@@ -113,13 +114,29 @@ class Route {
   /// and security
   bool _readFromPublic() {
     String path = SafeUri.safeDecodeFull(rq.uri.path);
-    List<String> invalidSegemnts = ['/../', '/./', '\\..\\', '\\.\\'];
+    List<String> invalidSegemnts = [
+      '/../',
+      '/./',
+      '/..',
+      '/.',
+      '\\..\\',
+      '\\.\\',
+      '\\..',
+      '\\.',
+    ];
     if (invalidSegemnts.any((segment) => path.contains(segment))) {
-      rq.renderError(403, message: 'Access denied!', toData: rq.isApiEndpoint);
+      rq.renderError(404, toData: rq.isApiEndpoint);
+      return false;
+    }
+    var publicFile = getFileFromPublic(path);
+
+    var publicRoot = p.normalize(getPublicDirectory(''));
+    var resolvedPath = p.normalize(publicFile.path);
+    if (resolvedPath != publicRoot && !p.isWithin(publicRoot, resolvedPath)) {
+      rq.renderError(404, toData: rq.isApiEndpoint);
       return false;
     }
 
-    var publicFile = getFileFromPublic(path);
     try {
       if (publicFile.existsSync()) {
         renderFile(publicFile);

@@ -27,8 +27,8 @@ import 'package:mcp_models/mcp_models.dart';
 ///     );
 ///
 ///     // Override or extend built-in method routing:
-///     mcp.method('notifications/initialized', (p) async =>
-///         JSONRPCNotification(method: 'notifications/initialized'));
+///     mcp.method('server/discover', (p) async =>
+///         JSONRPCResultResponse(result: EmptyResult()));
 ///   }
 /// }
 /// ```
@@ -101,8 +101,8 @@ abstract class McpServerController extends Controller {
       case '':
         return JSONRPCResultResponse(result: EmptyResult());
 
-      case 'initialize':
-        return _buildInitializeResponse(id, registry);
+      case 'server/discover':
+        return _buildDiscoverResponse(id, registry);
 
       case 'tools/list':
         return ListToolsResultResponse(
@@ -129,12 +129,6 @@ abstract class McpServerController extends Controller {
       case 'prompts/get':
         return await _dispatchPromptGet(payload, id, registry);
 
-      case 'notifications/initialized':
-        return JSONRPCNotification(method: 'notifications/initialized');
-
-      case 'logging/setLevel':
-        return SetLevelResultResponse(id: id, result: Result());
-
       default:
         return JSONRPCErrorResponse(
           id: id,
@@ -145,19 +139,18 @@ abstract class McpServerController extends Controller {
 
   // ── Built-in handlers ────────────────────────────────────────────────────
 
-  MCP _buildInitializeResponse(String id, McpBuilder registry) {
-    return InitializeResultResponse(
+  MCP _buildDiscoverResponse(String id, McpBuilder registry) {
+    return DiscoverResultResponse(
       id: id,
-      result: InitializeResult(
+      result: DiscoverResult(
+        supportedVersions: const ['2026-07-28'],
         capabilities: ServerCapabilities({
           'tools': registry.buildToolsResult().toMap(),
           'resources': {'list': true, 'read': true},
           'prompts': {'list': true, 'get': true},
         }),
-        serverInfo: Implementation(
-          name: 'finch-mcp-server',
-          version: '1.0.0',
-        ),
+        ttlMs: const Duration(minutes: 5).inMilliseconds,
+        cacheScope: CacheScope.public,
       ),
     );
   }

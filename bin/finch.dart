@@ -265,6 +265,30 @@ void main(List<String> args) async {
           ),
         ],
       ),
+      CappController(
+        'make:migration',
+        description: 'Make new migration',
+        run: (c) => ProjectCommands().createMigrateFile(c),
+        options: [
+          helpOption,
+          CappOption(
+            name: 'name',
+            shortName: 'n',
+            description: 'Name of migration',
+          ),
+          CappOption(
+            name: 'path',
+            shortName: 'p',
+            description: 'Path of migration (default: ./lib/migrations/)',
+          ),
+          CappOption(
+            name: 'sqlite',
+            shortName: 's',
+            description: 'Create migration for SQLite',
+            value: 'sqlite',
+          ),
+        ],
+      ),
     ],
   );
 

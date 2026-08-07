@@ -77,6 +77,18 @@ extension ConvertString on String {
     return slug;
   }
 
+  /// Convert slug to PascalCase.
+  String toPascalCase() {
+    String slug = toSlug();
+    List<String> words = slug.split('-');
+    String pascalCase = words
+        .map((word) => word.isNotEmpty
+            ? '${word[0].toUpperCase()}${word.substring(1)}'
+            : '')
+        .join();
+    return pascalCase;
+  }
+
   /// Checks if the string is a valid slug.
   /// This method compares the original string to its slugified version to determine if it is a valid slug.
   /// Returns `true` if the string is a valid slug; otherwise, returns `false`.

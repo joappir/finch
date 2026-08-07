@@ -414,11 +414,6 @@ class FinchApp {
                 description: 'Init SQLite and MySQL migration together',
               ),
               CappOption(
-                name: 'create',
-                shortName: 'c',
-                description: 'Create migration',
-              ),
-              CappOption(
                 name: 'name',
                 shortName: 'n',
                 description: 'Name of migration file while creating',
@@ -512,11 +507,6 @@ class FinchApp {
                 description: 'Init migration',
               ),
               CappOption(
-                name: 'create',
-                shortName: 'c',
-                description: 'Create migration',
-              ),
-              CappOption(
                 name: 'name',
                 shortName: 'n',
                 description: 'Name of migration file while creating',
@@ -542,6 +532,7 @@ class FinchApp {
                         migrations: _dartMigrations
                             .where((m) => m.target == MigrationTarget.sqlite)
                             .toList()),
+                    type: CappProgressType.circle,
                   );
                   var index = 1;
                   var table =
@@ -562,25 +553,6 @@ class FinchApp {
                 return CappConsole.empty;
               }
 
-              if (c.existsOption('create')) {
-                var name = "";
-                if (c.existsOption('name')) {
-                  name = c.getOption('name');
-                } else {
-                  name = CappConsole.read(
-                    "Enter name of migration: ",
-                    isRequired: true,
-                  );
-                }
-
-                var res = await CappConsole.progress<String>(
-                  "Creating migration...",
-                  () async =>
-                      SqliteMigration(sqliteDriver).migrateCreate(name: name),
-                );
-                return CappConsole(res);
-              }
-
               if (c.existsOption('rollback')) {
                 int deep = c.getOption('rollback', def: '1').toInt(def: 1);
                 var res = await CappConsole.progress<List<String>>(
@@ -590,6 +562,7 @@ class FinchApp {
                       dartMigrations: _dartMigrations
                           .where((m) => m.target == MigrationTarget.sqlite)
                           .toList()),
+                  type: CappProgressType.circle,
                 ).catchError((e) {
                   CappConsole.write(
                     "\n\n$e\n",
@@ -670,6 +643,7 @@ class FinchApp {
                     ).init();
                     return appLanguages.length.toString();
                   },
+                  type: CappProgressType.circle,
                 );
                 return CappConsole("Count of languages: $res");
               }
@@ -771,6 +745,29 @@ class FinchApp {
                 name: 'path',
                 shortName: 'p',
                 description: 'Path of middleware (default: ./lib/middleware/)',
+              ),
+            ],
+          ),
+          CappController(
+            'make:migration',
+            description: 'Make new migration',
+            run: (c) => ProjectCommands().createMigrateFile(c),
+            options: [
+              CappOption(
+                name: 'name',
+                shortName: 'n',
+                description: 'Name of migration',
+              ),
+              CappOption(
+                name: 'path',
+                shortName: 'p',
+                description: 'Path of migration (default: ./lib/migrations/)',
+              ),
+              CappOption(
+                name: 'sqlite',
+                shortName: 's',
+                description: 'Create migration for SQLite',
+                value: 'sqlite',
               ),
             ],
           ),
@@ -1232,6 +1229,7 @@ class FinchApp {
           );
           return <String>[];
         }),
+        type: CappProgressType.circle,
       );
       var index = 1;
       var table = res.map((e) => [(index++).toString(), 'MySQL', e]).toList();
@@ -1248,6 +1246,7 @@ class FinchApp {
               migrations: _dartMigrations
                   .where((m) => m.target == MigrationTarget.sqlite)
                   .toList()),
+          type: CappProgressType.circle,
         );
         var index = 1;
         table.addAll(
@@ -1259,24 +1258,6 @@ class FinchApp {
 
       CappConsole.writeTable(table, color: CappColors.success);
       return CappConsole("");
-    }
-
-    if (c.existsOption('create')) {
-      var name = "";
-      if (c.existsOption('name')) {
-        name = c.getOption('name');
-      } else {
-        name = CappConsole.read(
-          "Enter name of migration: ",
-          isRequired: true,
-        );
-      }
-
-      var res = await CappConsole.progress<String>(
-        "Creating migration...",
-        () async => MysqlMigration.migrateCreate(name: name),
-      );
-      return CappConsole(res);
     }
 
     if (c.existsOption('rollback')) {
@@ -1295,6 +1276,7 @@ class FinchApp {
           );
           return <String>[];
         }),
+        type: CappProgressType.circle,
       );
       CappConsole.writeTable(
         [
@@ -1339,5 +1321,5 @@ class _Info {
   /// - MINOR: New features (backward compatible)
   /// - PATCH: Bug fixes (backward compatible)
   /// - PRERELEASE: Pre-release identifiers (alpha, beta, rc)
-  final String version = '1.5.0';
+  final String version = '1.5.1';
 }

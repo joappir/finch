@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:finch/src/tools/console.dart';
-import 'package:finch/src/tools/convertor/convert_strings.dart';
 import 'package:finch/src/tools/path.dart';
 import 'package:finch/src/finch_app.dart';
 import 'package:finch/finch_mysql.dart';
@@ -240,38 +239,6 @@ class SqliteMigration {
     }
 
     return successRollbackFiles;
-  }
-
-  /// Creates a new migration file template.
-  /// This method generates a new SQL migration file in the migrations directory
-  /// with a timestamp-based filename. The file contains a basic template with
-  /// sections for:
-  /// - Migration SQL statements (-- ## NEW VERSION:)
-  /// - Rollback SQL statements (-- ## ROLL BACK:)
-  /// The filename format is: `{timestamp}_migration.sql`
-  /// Returns a success message with the path of the created file.
-  Future<String> migrateCreate({
-    String name = '',
-  }) async {
-    File file = File(
-      path.join(
-        pathTo(FinchApp.config.pathMigrationSQLite),
-        '${DateTime.now().millisecondsSinceEpoch}_'
-        '${name.isNotEmpty ? '${name.toSlug().replaceAll('-', '_')}_' : ''}'
-        'migration.sql',
-      ),
-    );
-
-    file.createSync(recursive: true);
-    file.writeAsString(
-      '-- ${DateTime.now()} \n'
-      '-- SQLite Migration File \n'
-      '${name.isNotEmpty ? '-- Name: $name \n' : ''}'
-      '-- ## NEW VERSION:\n\n\n\n'
-      '-- ## ROLL BACK:\n\n\n\n',
-    );
-    Console.i('Migration file created: ${file.path}');
-    return 'Create migration file command executed successfully.';
   }
 
   /// Checks if a migration file has already been executed.

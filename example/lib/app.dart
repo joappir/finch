@@ -12,6 +12,7 @@ import 'db/example_collections.dart';
 import 'models/example_model.dart';
 import 'package:finch/finch_console.dart';
 import 'package:finch/finch_app.dart';
+import 'route/meeting_route.dart';
 import 'route/socket_route.dart';
 import 'route/web_route.dart';
 import 'package:finch/finch_capp.dart';
@@ -47,9 +48,13 @@ final socketManager = SocketManager(
         "User disconnected! count: ${count - 1}",
         path: "output",
       );
+      MeetingRoomManager.instance.onDisconnect(socket);
     },
   ),
-  routes: getSocketRoute(),
+  routes: {
+    ...getSocketRoute(),
+    ...MeetingRoomManager.instance.getRoutes(),
+  },
 );
 
 void main([List<String>? args]) async {
