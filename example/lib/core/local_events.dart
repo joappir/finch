@@ -4,7 +4,7 @@ import 'package:finch/finch_tools.dart';
 
 var localEvents = <String, Object>{
   'route': (String key) {
-    return FinchRoute.getByKey(key)?.getUrl() ?? '';
+    return FinchRoute.getByKey(key)?.getUrl(Context.rq) ?? '';
   },
   'hasFlash': () {
     return Context.rq.get('flash') != null;

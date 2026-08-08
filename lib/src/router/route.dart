@@ -196,7 +196,7 @@ class Route {
     }
 
     if (endpoint == path) {
-      if (!route.allowMethod()) {
+      if (!route.allowMethod(rq.method)) {
         return (found: false, urlParams: urlParams);
       }
 

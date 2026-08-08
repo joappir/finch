@@ -26,25 +26,25 @@ void main() async {
     ),
   );
 
-  Future<List<FinchRoute>> routing(Request rq) async {
+  Future<List<FinchRoute>> routing() async {
     return [
       FinchRoute(
         path: "/",
-        index: () => rq.renderString(text: "TEST"),
+        index: () => Context.rq.renderString(text: "TEST"),
         children: [
           FinchRoute(
             path: '/without_cache_test',
             index: () async {
-              rq.assetManager.includes = [];
-              rq.addAsset(Asset(
+              Context.rq.assetManager.includes = [];
+              Context.rq.addAsset(Asset(
                   path: 'public/test.css',
                   type: AssetType.css,
                   cache: AssetCache.appVersion));
-              rq.addAsset(Asset(
+              Context.rq.addAsset(Asset(
                   path: 'public/test.js',
                   type: AssetType.js,
                   cache: AssetCache.appVersion));
-              return rq.renderView(
+              return Context.rq.renderView(
                 path:
                     '{{ assets.css() }}, {{ assets.js() }}, {{ assets.dataJs() }}',
                 isFile: false,
@@ -54,16 +54,16 @@ void main() async {
           FinchRoute(
             path: '/with_cache_test',
             index: () async {
-              rq.assetManager.includes = [];
-              rq.addAsset(Asset(
+              Context.rq.assetManager.includes = [];
+              Context.rq.addAsset(Asset(
                   path: 'public/test.css',
                   type: AssetType.css,
                   cache: AssetCache.appVersion));
-              rq.addAsset(Asset(
+              Context.rq.addAsset(Asset(
                   path: 'public/test.js',
                   type: AssetType.js,
                   cache: AssetCache.appVersion));
-              return rq.renderView(
+              return Context.rq.renderView(
                 path:
                     '{{ assets.css() }}, {{ assets.js() }}, {{ assets.dataJs() }}',
                 isFile: false,
@@ -73,22 +73,22 @@ void main() async {
           FinchRoute(
             path: '/test_cookies/list',
             index: () {
-              rq.addCookie('SYSTEM_TEST', 'TEST_VALUE_2', safe: false);
-              return rq.renderDataParam(data: {
-                'cookies': rq.cookies,
-                'cookies_res': rq.response.cookies,
+              Context.rq.addCookie('SYSTEM_TEST', 'TEST_VALUE_2', safe: false);
+              return Context.rq.renderDataParam(data: {
+                'cookies': Context.rq.cookies,
+                'cookies_res': Context.rq.response.cookies,
               });
             },
           ),
           FinchRoute(
             path: '/test_cookies/delete_cookies',
             index: () {
-              var key = rq.get<String>('key');
+              var key = Context.rq.get<String>('key');
               Console.i("Deleting cookie with key: $key");
-              rq.removeCookie(key);
-              return rq.renderDataParam(data: {
-                'cookies': rq.cookies,
-                'cookies_res': rq.response.cookies,
+              Context.rq.removeCookie(key);
+              return Context.rq.renderDataParam(data: {
+                'cookies': Context.rq.cookies,
+                'cookies_res': Context.rq.response.cookies,
                 'key_to_delete': key,
               });
             },
@@ -98,7 +98,7 @@ void main() async {
             methods: Methods.GET_ONLY,
             index: () async {
               var _ = TestAdvancedForm();
-              return rq.renderDataParam();
+              return Context.rq.renderDataParam();
             },
           ),
           FinchRoute(
@@ -119,11 +119,11 @@ void main() async {
             index: () async {
               late String ln;
               for (var i = 0; i < 10; i++) {
-                ln = rq.getLanguage();
+                ln = Context.rq.getLanguage();
               }
-              return rq.renderDataParam(data: {
-                'cookies': rq.cookies,
-                'cookies_res': rq.response.cookies,
+              return Context.rq.renderDataParam(data: {
+                'cookies': Context.rq.cookies,
+                'cookies_res': Context.rq.response.cookies,
                 'language': ln,
               });
             },
@@ -134,7 +134,7 @@ void main() async {
             index: () async {
               var form = TestAdvancedForm();
               await form.check();
-              return rq.renderDataParam();
+              return Context.rq.renderDataParam();
             },
           ),
           FinchRoute(
@@ -150,17 +150,17 @@ void main() async {
                   );
                 },
               ).take(10);
-              return rq.renderSSE(stream);
+              return Context.rq.renderSSE(stream);
             },
           ),
           FinchRoute(
             path: 'htmler',
             index: () {
-              rq.addParam('variable', 'VALUE');
-              rq.addParam('list', ['item1', 'item2', 'item3', 'item4']);
-              rq.addParam('condition', true);
+              Context.rq.addParam('variable', 'VALUE');
+              Context.rq.addParam('list', ['item1', 'item2', 'item3', 'item4']);
+              Context.rq.addParam('condition', true);
 
-              return rq.renderTag(
+              return Context.rq.renderTag(
                   pretty: true,
                   tag: $Html(
                     attrs: {
@@ -229,7 +229,7 @@ void main() async {
           FinchRoute(
             path: 'checkurl',
             index: () {
-              return rq.renderView(
+              return Context.rq.renderView(
                 path: "{{ \$e.url('test') }}",
                 isFile: false,
               );
@@ -245,14 +245,15 @@ void main() async {
             path: 'debug_test',
             methods: Methods.ALL,
             index: () {
-              return rq.renderView(path: "<h1>Debug Test</h1>", isFile: false);
+              return Context.rq
+                  .renderView(path: "<h1>Debug Test</h1>", isFile: false);
             },
           ),
           FinchRoute(
             path: 'widget',
             index: () {
-              rq.addParam("testParam", "paramValue");
-              return rq.renderView(
+              Context.rq.addParam("testParam", "paramValue");
+              return Context.rq.renderView(
                 path: "{{ \$e.url('test') }}\n"
                     "{{ testParam }}\n"
                     "{{ \$t('test.translate') }}\n",
@@ -264,17 +265,17 @@ void main() async {
             path: "api/info",
             methods: Methods.ONLY_GET,
             index: () {
-              rq.addParam("data", "TEST");
-              return rq.renderData(data: rq.getParams());
+              Context.rq.addParam("data", "TEST");
+              return Context.rq.renderData(data: Context.rq.getParams());
             },
           ),
           FinchRoute(
             path: "api",
             index: () {
-              return rq.renderView(
+              return Context.rq.renderView(
                 path: '',
-                data: {'is_api': rq.isApiEndpoint},
-                toData: rq.isApiEndpoint,
+                data: {'is_api': Context.rq.isApiEndpoint},
+                toData: Context.rq.isApiEndpoint,
               );
             },
           ),
@@ -282,11 +283,11 @@ void main() async {
             path: "api/post",
             methods: Methods.ONLY_POST,
             index: () {
-              return rq.renderData(data: {
-                'sended': rq.getAll(),
+              return Context.rq.renderData(data: {
+                'sended': Context.rq.getAll(),
                 'cookies': {
-                  'sessionId': rq.getCookie('sessionId', safe: false),
-                  'username': rq.getCookie('username', safe: false),
+                  'sessionId': Context.rq.getCookie('sessionId', safe: false),
+                  'username': Context.rq.getCookie('username', safe: false),
                 },
               });
             },
@@ -296,7 +297,7 @@ void main() async {
             methods: Methods.ALL,
             auth: AppAuthController(true),
             index: () {
-              return rq.renderData(data: {
+              return Context.rq.renderData(data: {
                 'user': "TEST",
               });
             },
@@ -306,7 +307,7 @@ void main() async {
             methods: Methods.ALL,
             auth: AppAuthController(false),
             index: () {
-              return rq.renderData(data: {
+              return Context.rq.renderData(data: {
                 'user': "TEST",
               });
             },
@@ -314,25 +315,25 @@ void main() async {
           FinchRoute(
             path: '/check_param_classic/:key1/:key2',
             index: () async {
-              return rq.renderData(data: {
-                'key1': rq.getParam('key1'),
-                'key2': rq.getParam('key2'),
+              return Context.rq.renderData(data: {
+                'key1': Context.rq.getParam('key1'),
+                'key2': Context.rq.getParam('key2'),
               });
             },
           ),
           FinchRoute(
             path: '/check_param_finch/:key1/:key2',
             index: () async {
-              return rq.renderData(data: {
-                'key1': rq.getParam('key1'),
-                'key2': rq.getParam('key2'),
+              return Context.rq.renderData(data: {
+                'key1': Context.rq.getParam('key1'),
+                'key2': Context.rq.getParam('key2'),
               });
             },
           ),
           FinchRoute(
             path: '/%AF/test',
             index: () async {
-              return rq.renderData(data: {
+              return Context.rq.renderData(data: {
                 'key1': 'value1',
                 'key2': 'value2',
               });
