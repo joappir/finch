@@ -771,6 +771,64 @@ class FinchApp {
               ),
             ],
           ),
+          CappController(
+            'route',
+            description: 'Inspect routes',
+            run: (c) async {
+              var routes = await exploreAllRoutes();
+              var showDetail = c.existsOption('detail');
+              var table = <List<String>>[
+                [
+                  '#',
+                  'Method',
+                  'Path',
+                  'Auth',
+                  'Key',
+                  if (showDetail) ...[
+                    'Controller',
+                    'Function',
+                    'Type',
+                    'Permissions',
+                    'Middlewares',
+                    'Ports'
+                  ],
+                ],
+              ];
+              for (var route in routes) {
+                table.add([
+                  route['#'].toString(),
+                  route['method'].toString(),
+                  route['fullPath'].toString(),
+                  route['hasAuth'] ? 'Yes' : 'No',
+                  route['key']?.toString() ?? '-',
+                  if (showDetail) ...[
+                    route['controller']?.toString() ?? '-',
+                    route['index']?.toString() ?? '-',
+                    route['type']?.toString() ?? '-',
+                    route['permissions']?.toString() ?? '-',
+                    route['middlewares']?.toString() ?? '-',
+                    route['ports']?.toString() ?? '-',
+                  ]
+                ]);
+              }
+
+              CappConsole.writeTable(table, color: CappColors.success);
+              return CappConsole.empty;
+            },
+            options: [
+              _helpOption,
+              CappOption(
+                name: 'list',
+                shortName: 'l',
+                description: 'List all routes',
+              ),
+              CappOption(
+                name: 'detail',
+                shortName: 'd',
+                description: 'Show more details of routes',
+              ),
+            ],
+          ),
           ...commands,
         ],
       );
