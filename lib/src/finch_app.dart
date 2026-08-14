@@ -83,7 +83,7 @@ class FinchApp {
   static late FinchConfigs config;
 
   /// A list of functions that return a [Future] containing a list of [FinchRoute] based on the [Request].
-  final List<Future<List<FinchRoute>> Function(Request rq)> _webRoutes = [];
+  final List<Future<List<FinchRoute>> Function()> _webRoutes = [];
 
   /// Clears all registered routes from the server.
   /// Returns the [FinchApp] instance to allow method chaining.
@@ -116,7 +116,7 @@ class FinchApp {
   /// The [router] function returns a [Future] containing a list of [FinchRoute] based on the provided [Request].
   /// This allows for dynamic routing based on the request.
   /// Returns the [FinchApp] instance to allow method chaining.
-  FinchApp addRouting(Future<List<FinchRoute>> Function(Request rq) router) {
+  FinchApp addRouting(Future<List<FinchRoute>> Function() router) {
     _webRoutes.add(router);
 
     return this;
@@ -129,7 +129,7 @@ class FinchApp {
     List<FinchRoute> routing = [];
 
     for (var webRoute in _webRoutes) {
-      routing.addAll(await webRoute(Context.rq));
+      routing.addAll(await webRoute());
     }
 
     return routing;
@@ -771,6 +771,64 @@ class FinchApp {
               ),
             ],
           ),
+          CappController(
+            'route',
+            description: 'Inspect routes',
+            run: (c) async {
+              var routes = await exploreAllRoutes();
+              var showDetail = c.existsOption('detail');
+              var table = <List<String>>[
+                [
+                  '#',
+                  'Method',
+                  'Path',
+                  'Auth',
+                  'Key',
+                  if (showDetail) ...[
+                    'Controller',
+                    'Function',
+                    'Type',
+                    'Permissions',
+                    'Middlewares',
+                    'Ports'
+                  ],
+                ],
+              ];
+              for (var route in routes) {
+                table.add([
+                  route['#'].toString(),
+                  route['method'].toString(),
+                  route['fullPath'].toString(),
+                  route['hasAuth'] ? 'Yes' : 'No',
+                  route['key']?.toString() ?? '-',
+                  if (showDetail) ...[
+                    route['controller']?.toString() ?? '-',
+                    route['index']?.toString() ?? '-',
+                    route['type']?.toString() ?? '-',
+                    route['permissions']?.toString() ?? '-',
+                    route['middlewares']?.toString() ?? '-',
+                    route['ports']?.toString() ?? '-',
+                  ]
+                ]);
+              }
+
+              CappConsole.writeTable(table, color: CappColors.success);
+              return CappConsole.empty;
+            },
+            options: [
+              _helpOption,
+              CappOption(
+                name: 'list',
+                shortName: 'l',
+                description: 'List all routes',
+              ),
+              CappOption(
+                name: 'detail',
+                shortName: 'd',
+                description: 'Show more details of routes',
+              ),
+            ],
+          ),
           ...commands,
         ],
       );
@@ -981,7 +1039,6 @@ class FinchApp {
             await debugger?.sendToAll({}, path: 'restartStarted');
             await stop(force: true);
             await start();
-            await getAllRoutes();
           }),
           'get_data': SocketEvent(onMessage: (socket, data) async {
             debugger?.sendToAll({
@@ -997,7 +1054,6 @@ class FinchApp {
           'reinit': SocketEvent(onMessage: (socket, data) async {
             print("Server is restarting...");
             await restart();
-            await getAllRoutes();
           }),
         },
       );
@@ -1026,25 +1082,25 @@ class FinchApp {
           }, path: "updateMemory");
         },
       ).start();
-      _webRoutes.add((Request rq) async {
-        rq.buffer.writeln(
-            "<script src='${rq.url('/debugger/console.js')}'></script>");
+      _webRoutes.add(() async {
+        Context.rqOrNull?.buffer.writeln(
+            "<script src='${Context.rq.url('/debugger/console.js')}'></script>");
         return [
           FinchRoute(
             path: 'debugger',
             index: () async {
-              await debugger?.requestHandle(rq, userId: "LOCAL_USER");
+              await debugger?.requestHandle(Context.rq, userId: "LOCAL_USER");
               debugger?.sendToAll({
                 'type': 'user_connected',
                 'userId': "LOCAL_USER",
               });
-              return rq.renderSocket();
+              return Context.rq.renderSocket();
             },
             children: [
               FinchRoute(
                 path: 'console.js',
                 index: () async {
-                  return rq.renderString(
+                  return Context.rq.renderString(
                     text: ConsoleWidget().layout,
                     contentType: ContentType(
                       'text',
@@ -1077,11 +1133,11 @@ class FinchApp {
     Map<String, dynamic> params = const {},
     List<String> permissions = const [],
   }) {
-    _webRoutes.add((Request rq) async {
+    _webRoutes.add(() async {
       return [
         FinchRoute(
           path: path,
-          index: index != null ? () => index(rq) : null,
+          index: index != null ? () => index(Context.rq) : null,
           methods: methods,
           auth: auth,
           children: children,
@@ -1321,5 +1377,5 @@ class _Info {
   /// - MINOR: New features (backward compatible)
   /// - PATCH: Bug fixes (backward compatible)
   /// - PRERELEASE: Pre-release identifiers (alpha, beta, rc)
-  final String version = '1.5.1';
+  final String version = '1.5.2';
 }

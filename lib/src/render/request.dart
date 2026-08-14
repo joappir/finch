@@ -1464,7 +1464,7 @@ class Request {
         Map<String, Object?> params = const {},
         Map<String, Object?> query = const {},
       ]) {
-        var res = FinchRoute.getByKey(key)?.getUrl(params, query);
+        var res = FinchRoute.getByKey(key)?.getUrl(this, params, query);
         if (res == null) {
           throw Exception("The route key '$key' not found!");
         }

@@ -1,4 +1,9 @@
 
+## 1.5.2
+- Removed the `Request rq` parameter from `FinchApp.addRouting()` callbacks; request data remains available through `Context.rq` inside route handlers
+- Improved route URL generation and method checks by passing request-specific values explicitly
+- Fix issue [#80](https://github.com/uproid/finch/issues/80): Support the Previous MCP Protocol Version with an Extended Deprecation Period
+
 ## 1.5.1
 - Upgraded MCP support to MCP 2.0 (`mcp_models: 2.0.0`): replaced `initialize`/`notifications/initialized` handling with the new `server/discover` method and `DiscoverResult` response
 - Added `make:migration` command to create SQL or Dart migration files from the CLI

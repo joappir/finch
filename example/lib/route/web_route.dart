@@ -16,7 +16,7 @@ final includeController = IncludeJsController();
 final apiController = ApiController(title: "API Documentation", app: app);
 final testMiddleware = TestMiddleware();
 
-Future<List<FinchRoute>> getWebRoute(Request rq) async {
+Future<List<FinchRoute>> getWebRoute() async {
   var paths = [
     FinchRoute(
       key: 'root.sse',
