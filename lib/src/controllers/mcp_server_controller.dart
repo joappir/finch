@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:finch/finch_console.dart';
 import 'package:finch/finch_route.dart';
 import 'package:finch/finch_tools.dart';
 import 'package:mcp_models/mcp_models_v2026.dart' as v26;
