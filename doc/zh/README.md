@@ -40,6 +40,7 @@ doc_meta:
 29. [Finch 中间件指南](29.middleware.md)
 30. [Finch 路由缓存指南](30.route_cache.md)
 31. [Finch MCP 服务器指南](31.mcp_server.md)
+32. [pubspec.yaml 中的 Finch 配置](32.pubspec_configuration.md)
 
 ## 功能特性
 

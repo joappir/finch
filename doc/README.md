@@ -40,6 +40,7 @@ Welcome to the Finch Documentation! This documentation will walk you through the
 29. [Finch Middleware Guide](29.middleware.md)
 30. [Finch Route Cache Guide](30.route_cache.md)
 31. [Finch MCP Server Guide](31.mcp_server.md)
+32. [Finch pubspec.yaml Configuration](32.pubspec_configuration.md)
 
 ## Features
 

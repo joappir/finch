@@ -40,6 +40,7 @@ Welkom bij de Finch Documentatie! Deze documentatie begeleidt je door het gebrui
 29. [Finch Middleware Gids](29.middleware.md)
 30. [Finch Route Cache Gids](30.route_cache.md)
 31. [Finch MCP Server Gids](31.mcp_server.md)
+32. [Finch-configuratie in pubspec.yaml](32.pubspec_configuration.md)
 
 ## Functies
 
