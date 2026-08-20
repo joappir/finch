@@ -45,7 +45,6 @@ dependencies:
   jinja: ^0.7.0
   intl: ^0.20.3
   mime: ^2.0.0
-  cron: ^0.6.2
   base32: ^2.2.0
   archive: ^4.1.0
   capp: ^2.1.0
