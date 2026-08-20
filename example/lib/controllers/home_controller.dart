@@ -377,6 +377,20 @@ class HomeController extends Controller {
         },
       );
 
+  Future<String> changeLanguage() async {
+    var redirectTo = '/';
+    var language = rq.uri.pathSegments.first;
+
+    rq.changeLanguege(language);
+    if (rq.uri.pathSegments.length > 1) {
+      redirectTo = joinPaths(rq.uri.pathSegments.sublist(1));
+    }
+    redirectTo =
+        rq.uri.replace(path: redirectTo, scheme: null, host: null).toString();
+
+    return rq.redirect("/$redirectTo");
+  }
+
   Future<String> socket() async {
     return socketManager.requestHandle(rq).then((rq) {
       return rq.renderSocket();
