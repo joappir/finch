@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:capp/capp.dart';
 import 'package:finch/finch_tools.dart';
-import 'package:http/http.dart' as http;
 import 'package:archive/archive_io.dart';
+import 'package:finch/src/tools/http/http.dart' as http;
 
 class CreateProject {
   String projectUrl =
@@ -77,7 +77,7 @@ class CreateProject {
       final response = await http.get(Uri.parse(url));
 
       // Check if the request was successful
-      if (response.statusCode == 200) {
+      if (response.status == 200) {
         // Create a file object
         final file = File(savePath);
 
@@ -87,7 +87,7 @@ class CreateProject {
         return savePath;
       } else {
         CappConsole.write(
-          "Error downloading template: ${response.statusCode}",
+          "Error downloading template: ${response.status}",
           CappColors.error,
           true,
         );

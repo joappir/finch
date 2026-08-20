@@ -3,7 +3,7 @@ import 'package:finch/src/tools/console.dart';
 import 'package:finch/finch_route.dart';
 import 'package:finch/finch_app.dart';
 import 'package:finch/finch_tools.dart';
-import 'package:http/http.dart' as http;
+import 'package:finch/src/tools/http/http.dart' as http;
 
 void main() async {
   FinchApp server = FinchApp(
@@ -105,12 +105,12 @@ void main() async {
       );
 
       expect(
-        req.statusCode,
+        req.status,
         200,
         reason:
             "Response success should contain 'console.js' it used for debugging",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test("checking Debugger2", () async {
@@ -125,7 +125,7 @@ void main() async {
         reason:
             "Response success should contain '<script src=...>' used for debugging",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test("checking Debugger3", () async {
@@ -139,7 +139,7 @@ void main() async {
         false,
         reason: "debugger used only on HTML pages",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
   });
 }

@@ -8,8 +8,8 @@ import 'package:finch/src/views/htmler.dart';
 import 'package:finch/finch_route.dart';
 import 'package:finch/finch_app.dart';
 import 'package:finch/finch_tools.dart';
-import 'package:http/http.dart' as http;
 import 'package:html/parser.dart';
+import 'package:finch/src/tools/http/http.dart' as http;
 
 void main() async {
   FinchApp server = FinchApp(
@@ -401,7 +401,7 @@ void main() async {
         Uri.parse("http://localhost:${httpServer.port}"),
       );
       expect(req.body, 'TEST', reason: "Response body should be 'TEST'");
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test("Test API", () async {
@@ -416,7 +416,7 @@ void main() async {
         true,
         reason: "timestamp should be > 0",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test('test api root path', () async {
@@ -430,7 +430,7 @@ void main() async {
         true,
         reason: "is_api should be true",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test("Test API 404", () async {
@@ -445,7 +445,7 @@ void main() async {
         true,
         reason: "timestamp should be > 0",
       );
-      expect(req.statusCode, 404, reason: "Status code should be 404");
+      expect(req.status, 404, reason: "Status code should be 404");
     });
 
     test("Test 404", () async {
@@ -459,7 +459,7 @@ void main() async {
         true,
         reason: "Response body should be html",
       );
-      expect(req.statusCode, 404, reason: "Status code should be 404");
+      expect(req.status, 404, reason: "Status code should be 404");
     });
 
     test("Test Method", () async {
@@ -473,7 +473,7 @@ void main() async {
         true,
         reason: "Response body should be html",
       );
-      expect(req.statusCode, 404, reason: "Status code should be 404");
+      expect(req.status, 404, reason: "Status code should be 404");
     });
 
     test("Test POST data", () async {
@@ -485,6 +485,7 @@ void main() async {
           'random': '$random',
         },
       );
+      print(req.body);
       var data = jsonDecode(req.body);
       expect(
         data['sended']['test'],
@@ -497,7 +498,7 @@ void main() async {
         random,
         reason: "Sendend random should be $random",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
   });
 
@@ -512,7 +513,7 @@ void main() async {
       'TEST',
       reason: "Response body should be TEST",
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test("Test Authenticator FAILED!", () async {
@@ -525,7 +526,7 @@ void main() async {
       false,
       reason: "Response success should be false",
     );
-    expect(req.statusCode, 404, reason: "Status code should be 404");
+    expect(req.status, 404, reason: "Status code should be 404");
   });
 
   test("Test Cookies", () async {
@@ -553,7 +554,7 @@ void main() async {
       'johndoe',
       reason: "Response success should be johndoe",
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test("Test Cookies & Languages", () async {
@@ -572,7 +573,7 @@ void main() async {
     var resCookies = data['cookies'] as List;
     var language = data['language'];
 
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
     expect(language, 'es', reason: "Language should be 'es'");
     expect(resCookies.first.toString(), contains('language=es;'));
 
@@ -584,7 +585,7 @@ void main() async {
     resCookies = data['cookies'];
     language = data['language'];
 
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
     expect(language, 'de', reason: "Language should be 'de'");
     expect(resCookies.first.toString(), contains('language=de;'));
   });
@@ -599,7 +600,7 @@ void main() async {
       "http://localhost:${httpServer.port}/test",
       reason: "Response success should be /test",
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test("check Error", () async {
@@ -612,7 +613,7 @@ void main() async {
       true,
       reason: "Response success should contain 'test error page'",
     );
-    expect(req.statusCode, 502, reason: "Status code should be 502");
+    expect(req.status, 502, reason: "Status code should be 502");
   });
 
   test("check Widget events", () async {
@@ -626,7 +627,7 @@ void main() async {
       "http://localhost:${httpServer.port}/test\nparamValue\ntest.translate",
       reason: "Response success should contain 'test error page'",
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test('Test renderTag', () async {
@@ -679,17 +680,16 @@ void main() async {
       html,
       contains('TEST CENTER COMMENT'),
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test('Test SSE', () async {
     var req = await http.get(
       Uri.parse("http://localhost:${httpServer.port}/sse"),
     );
-
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
     expect(
-      req.headers['content-type'],
+      req.headers['content-type']?.join(''),
       'text/event-stream; charset=utf-8',
       reason: "Content-Type should be text/event-stream",
     );
@@ -720,8 +720,8 @@ void main() async {
       Uri.parse("http://localhost:${httpServer.port}/with_cache_test"),
     );
 
-    expect(req1.statusCode, 200, reason: "Status code should be 200");
-    expect(req2.statusCode, 200, reason: "Status code should be 200");
+    expect(req1.status, 200, reason: "Status code should be 200");
+    expect(req2.status, 200, reason: "Status code should be 200");
     expect(
       req1.body,
       equals(req2.body),
@@ -745,7 +745,7 @@ void main() async {
 
     var cookies = <String>[];
     if (reqGet.headers['set-cookie'] != null) {
-      cookies.add(reqGet.headers['set-cookie']!);
+      cookies.add(reqGet.headers['set-cookie']!.join('; '));
     }
 
     var reqPost = await http.post(
@@ -776,7 +776,7 @@ void main() async {
     );
     var dataPost2 = jsonDecode(reqPost2.body);
 
-    expect(reqPost.statusCode, 200, reason: "Status code should be 200");
+    expect(reqPost.status, 200, reason: "Status code should be 200");
     expect(
       dataPost['test_form']['success'],
       isTrue,
@@ -834,7 +834,7 @@ void main() async {
         value2,
         reason: "key2 should be '$value2'",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test('Finch Params', () async {
@@ -862,7 +862,7 @@ void main() async {
         value2,
         reason: "key2 should be '$value2'",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test('Url segments with special characters', () async {
@@ -884,7 +884,7 @@ void main() async {
     test('Url segments with special characters 404', () async {
       String url = 'http://localhost:${httpServer.port}/%AF/test/404';
       var req = await http.get(Uri.parse(url));
-      expect(req.statusCode, 404, reason: "Status code should be 404");
+      expect(req.status, 404, reason: "Status code should be 404");
     });
   });
 }

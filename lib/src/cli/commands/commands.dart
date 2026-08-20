@@ -14,7 +14,7 @@ import 'package:finch/finch_app.dart';
 import 'package:archive/archive_io.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as p;
-import 'package:http/http.dart' as http;
+import 'package:finch/src/tools/http/http.dart' as http;
 
 class ProjectCommands {
   Map<String, dynamic> finchConfigs = {};
@@ -602,7 +602,7 @@ class ProjectCommands {
       type: CappProgressType.timer,
     );
 
-    if (request.statusCode == 200) {
+    if (request.status == 200) {
       var repos = jsonDecode(request.body) as List<dynamic>;
       int index = 0;
       for (var repo in repos) {
@@ -623,7 +623,7 @@ class ProjectCommands {
       }
     } else {
       return CappConsole(
-        "Failed to fetch templates from GitHub. Status code: ${request.statusCode}",
+        "Failed to fetch templates from GitHub. Status code: ${request.status}",
         CappColors.error,
       );
     }
