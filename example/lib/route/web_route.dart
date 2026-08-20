@@ -271,14 +271,9 @@ Future<List<FinchRoute>> getWebRoute() async {
       path: '/',
       methods: Methods.ALL,
       controller: homeController,
+      extraPath: Setting.languages.keys.map((e) => '$e/*').toList(),
       children: [
         ...paths,
-        FinchRoute(
-          key: 'root.language.change',
-          path: 'fa/*',
-          extraPath: Setting.languages.keys.map((e) => '$e/*').toList(),
-          index: homeController.changeLanguage,
-        )
       ],
     ),
   ];
