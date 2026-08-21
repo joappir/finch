@@ -35,7 +35,7 @@ class Console {
   /// // ==================================================
   /// ```
   static void json(dynamic object) {
-    FinchLogger.w(
+    Log.w(
       JsonEncoder.withIndent('  ').convert(object),
       level: LogLevel.FINE,
     );
@@ -45,7 +45,7 @@ class Console {
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void w(dynamic object) {
-    FinchLogger.w(object, level: LogLevel.WARNING);
+    Log.w(object, level: LogLevel.WARNING);
     _writeLog(object, 'warning');
   }
 
@@ -53,7 +53,7 @@ class Console {
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void e(dynamic object) {
-    FinchLogger.w(object, level: LogLevel.ERROR);
+    Log.w(object, level: LogLevel.ERROR);
     _writeLog(object, 'error');
     for (var callback in onError) {
       callback(object, 'error');
@@ -64,7 +64,7 @@ class Console {
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void i(dynamic object) {
-    FinchLogger.w(object, level: LogLevel.INFO);
+    Log.w(object, level: LogLevel.INFO);
     _writeLog(object);
   }
 
@@ -72,7 +72,7 @@ class Console {
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void p(dynamic object) {
-    FinchLogger.w(object, level: LogLevel.FINE);
+    Log.w(object, level: LogLevel.FINE);
     _writeLog(object, 'fatal');
   }
 
@@ -80,7 +80,7 @@ class Console {
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void d(dynamic object) {
-    FinchLogger.w(object, level: LogLevel.WARNING);
+    Log.w(object, level: LogLevel.WARNING);
     _writeLog(object, 'debug');
   }
 
@@ -138,27 +138,27 @@ class Console {
 
 class Print {
   static void error(String message) {
-    FinchLogger.w(message, level: LogLevel.ERROR, header: false);
+    Log.w(message, level: LogLevel.ERROR, header: false);
   }
 
   static void info(String message) {
-    FinchLogger.w(message, level: LogLevel.INFO, header: false);
+    Log.w(message, level: LogLevel.INFO, header: false);
   }
 
   static void debug(String message) {
-    FinchLogger.w(message, level: LogLevel.DEBUG, header: false);
+    Log.w(message, level: LogLevel.DEBUG, header: false);
   }
 
   static void fatal(String message) {
-    FinchLogger.w(message, level: LogLevel.ERROR, header: false);
+    Log.w(message, level: LogLevel.ERROR, header: false);
   }
 
   static void warning(String message) {
-    FinchLogger.w(message, level: LogLevel.WARNING, header: false);
+    Log.w(message, level: LogLevel.WARNING, header: false);
   }
 }
 
-class FinchLogger {
+class Log {
   static void w(dynamic object,
       {var level = LogLevel.FINE, var header = true}) {
     final frames = StackTrace.current.toString().split('\n');
