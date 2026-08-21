@@ -20,7 +20,7 @@ class FinchCron {
   String schedule;
 
   /// Internal parsed representation of [schedule].
-  late final _CronSchedule _parsedSchedule;
+  late final CronSchedule _parsedSchedule;
 
   /// Internal timer used to check the schedule once per second.
   Timer? _timer;
@@ -71,7 +71,7 @@ class FinchCron {
     this.delayFirstMoment = true,
   }) {
     registerTime = DateTime.now().microsecondsSinceEpoch;
-    _parsedSchedule = _CronSchedule.parse(schedule);
+    _parsedSchedule = CronSchedule.parse(schedule);
   }
 
   /// Starts the cron job.
@@ -181,7 +181,7 @@ enum CronStatus {
 /// Supports `*`, single values, comma-separated lists, `-` ranges and `*/n` or
 /// `a-b/n` step values, matching the syntax used throughout [FinchCron]'s helpers
 /// (e.g. `evrySecond`, `evryMinute`).
-class _CronSchedule {
+class CronSchedule {
   final List<int>? seconds;
   final List<int>? minutes;
   final List<int>? hours;
@@ -189,7 +189,7 @@ class _CronSchedule {
   final List<int>? months;
   final List<int>? weekdays;
 
-  _CronSchedule({
+  CronSchedule({
     this.seconds,
     this.minutes,
     this.hours,
@@ -198,19 +198,26 @@ class _CronSchedule {
     this.weekdays,
   });
 
-  factory _CronSchedule.parse(String cronFormat) {
-    final parts = cronFormat
-        .split(RegExp(r'\s+'))
-        .where((p) => p.isNotEmpty)
-        .toList();
+  @override
+  String toString() {
+    return "Class<CronSchedule>(sec: $seconds, min: $minutes, hour: $hours, "
+        "month: $months, week: $weekdays)";
+  }
+
+  factory CronSchedule.parse(String cronFormat) {
+    final parts =
+        cronFormat.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
 
     if (parts.length != 5 && parts.length != 6) {
       throw FormatException('Invalid cron expression: $cronFormat');
     }
 
-    final fields = parts.length == 5 ? [null, ...parts] : parts;
+    // A 5-field expression has no seconds field, so per standard cron
+    // semantics it fires once per matching minute (at second 0), not on
+    // every second of that minute.
+    final fields = parts.length == 5 ? ['0', ...parts] : parts;
 
-    return _CronSchedule(
+    return CronSchedule(
       seconds: _parseField(fields[0], 0, 59),
       minutes: _parseField(fields[1], 0, 59),
       hours: _parseField(fields[2], 0, 23),
