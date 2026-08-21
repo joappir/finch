@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
-import 'package:logger/logger.dart';
+import 'package:finch/src/finch_config.dart';
 
 typedef LogCallback = void Function(Object? log, String type);
 
@@ -15,14 +16,6 @@ typedef LogCallback = void Function(Object? log, String type);
 class Console {
   static final onError = <LogCallback>[];
   static final onLogging = <LogCallback>[];
-
-  /// The [Logger] instance used for managing log messages.
-  static final _logger = Logger(
-    level: isTestRunning() ? Level.off : Level.debug,
-    printer: PrettyPrinter(
-      printEmojis: false,
-    ),
-  );
 
   /// Logs a formatted JSON object with visual separators.
   ///
@@ -42,27 +35,17 @@ class Console {
   /// // ==================================================
   /// ```
   static void json(dynamic object) {
-    var log = Logger(
-      level: isTestRunning() ? Level.off : Level.debug,
-      printer: PrettyPrinter(
-        printEmojis: false,
-        noBoxingByDefault: true,
-        excludeBox: {},
-        colors: true,
-        methodCount: 0,
-      ),
+    FinchLogger.w(
+      JsonEncoder.withIndent('  ').convert(object),
+      level: LogLevel.FINE,
     );
-
-    log.f("=" * 50 + '\n');
-    log.f(object);
-    log.f('\n${"=" * 50}');
   }
 
   /// Logs a warning message.
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void w(dynamic object) {
-    _logger.w(object);
+    FinchLogger.w(object, level: LogLevel.WARNING);
     _writeLog(object, 'warning');
   }
 
@@ -70,7 +53,7 @@ class Console {
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void e(dynamic object) {
-    _logger.e(object);
+    FinchLogger.w(object, level: LogLevel.ERROR);
     _writeLog(object, 'error');
     for (var callback in onError) {
       callback(object, 'error');
@@ -81,7 +64,7 @@ class Console {
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void i(dynamic object) {
-    _logger.i(object);
+    FinchLogger.w(object, level: LogLevel.INFO);
     _writeLog(object);
   }
 
@@ -89,7 +72,7 @@ class Console {
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void p(dynamic object) {
-    _logger.f(object);
+    FinchLogger.w(object, level: LogLevel.FINE);
     _writeLog(object, 'fatal');
   }
 
@@ -97,7 +80,7 @@ class Console {
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void d(dynamic object) {
-    _logger.d(object);
+    FinchLogger.w(object, level: LogLevel.WARNING);
     _writeLog(object, 'debug');
   }
 
@@ -154,34 +137,77 @@ class Console {
 }
 
 class Print {
-  static final _logger = Logger(
-    level: Console.isTestRunning() ? Level.off : Level.debug,
-    printer: PrettyPrinter(
-      printEmojis: false,
-      noBoxingByDefault: false,
-      lineLength: 0,
-      stackTraceBeginIndex: 0,
-      methodCount: 0,
-      errorMethodCount: 0,
-    ),
-  );
   static void error(String message) {
-    _logger.e(message);
+    FinchLogger.w(message, level: LogLevel.ERROR, header: false);
   }
 
   static void info(String message) {
-    _logger.i(message);
+    FinchLogger.w(message, level: LogLevel.INFO, header: false);
   }
 
   static void debug(String message) {
-    _logger.d(message);
+    FinchLogger.w(message, level: LogLevel.DEBUG, header: false);
   }
 
   static void fatal(String message) {
-    _logger.f(message);
+    FinchLogger.w(message, level: LogLevel.ERROR, header: false);
   }
 
   static void warning(String message) {
-    _logger.w(message);
+    FinchLogger.w(message, level: LogLevel.WARNING, header: false);
   }
+}
+
+class FinchLogger {
+  static void w(dynamic object,
+      {var level = LogLevel.FINE, var header = true}) {
+    final frames = StackTrace.current.toString().split('\n');
+    final callerFrame = frames.firstWhere(
+      (frame) => !frame.contains('console.dart'),
+      orElse: () => '',
+    );
+
+    String startColor = "";
+    String endColor = "";
+
+    switch (level) {
+      case LogLevel.ERROR:
+        startColor = "\x1B[38;5;196m"; // bright red
+        break;
+
+      case LogLevel.WARNING:
+        startColor = "\x1B[38;2;255;193;7m";
+        break;
+      case LogLevel.DEBUG:
+        startColor = "\x1B[38;2;150;150;150m"; // gray
+        break;
+
+      case LogLevel.FINE:
+        startColor = "\x1B[38;2;80;220;120m"; // gray
+        break;
+    }
+
+    StringBuffer str = StringBuffer();
+    str.writeln("$startColor┌${"─" * 98}┐$endColor");
+    if (header) {
+      str.writeln("$startColor│ $callerFrame$endColor");
+      str.writeln("$startColor├${"─" * 98}┤$endColor");
+    }
+    for (var obLine in object.toString().split('\n')) {
+      str.writeln("$startColor│ $obLine$endColor");
+    }
+    str.writeln(startColor + ("└${"─" * 98}┘") + endColor);
+
+    print(str.toString());
+  }
+}
+
+enum LogLevel { ERROR, WARNING, INFO, FINE, DEBUG }
+
+void main(List<String> args) {
+  Console.e("ERROR");
+  Console.w("WARNING");
+  Console.p("SUCCESS");
+  Console.i("INFO");
+  Console.json(FinchDBConfig.defaultLanguages);
 }
