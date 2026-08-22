@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:finch/src/finch_config.dart';
 
 typedef LogCallback = void Function(Object? log, String type);
 
@@ -68,20 +67,20 @@ class Console {
     _writeLog(object);
   }
 
+  /// Logs an debug message.
+  ///
+  /// The [object] parameter can be any type of object to be logged.
+  static void d(dynamic object) {
+    Log.w(object, level: LogLevel.DEBUG);
+    _writeLog(object);
+  }
+
   /// Logs a fatal or critical error message.
   ///
   /// The [object] parameter can be any type of object to be logged.
   static void p(dynamic object) {
     Log.w(object, level: LogLevel.FINE);
     _writeLog(object, 'fatal');
-  }
-
-  /// Logs a debug message.
-  ///
-  /// The [object] parameter can be any type of object to be logged.
-  static void d(dynamic object) {
-    Log.w(object, level: LogLevel.WARNING);
-    _writeLog(object, 'debug');
   }
 
   /// Writes the log to the console.
@@ -94,7 +93,7 @@ class Console {
         callback(object, type);
       }
     } else {
-      write(object);
+      //write(object);
     }
   }
 
@@ -162,13 +161,16 @@ class Log {
   static void w(dynamic object,
       {var level = LogLevel.FINE, var header = true}) {
     final frames = StackTrace.current.toString().split('\n');
-    final callerFrame = frames.firstWhere(
-      (frame) => !frame.contains('console.dart'),
-      orElse: () => '',
-    );
+    final callerFrame = frames
+        .firstWhere(
+          (frame) => !frame.contains('console.dart'),
+          orElse: () => '',
+        )
+        .replaceFirst(RegExp(r'^\s*#?\d+\s+'), '')
+        .trim();
 
     String startColor = "";
-    String endColor = "";
+    String endColor = "\x1B[0m";
 
     switch (level) {
       case LogLevel.ERROR:
@@ -193,9 +195,26 @@ class Log {
       str.writeln("$startColor│ $callerFrame$endColor");
       str.writeln("$startColor├${"─" * 98}┤$endColor");
     }
-    for (var obLine in object.toString().split('\n')) {
-      str.writeln("$startColor  $obLine$endColor");
+
+    if (object is Map &&
+        object.containsKey('error') &&
+        object.containsKey('stack')) {
+      str.writeln("$startColor  ${DateTime.now()} ${object['error']}$endColor");
+      str.writeln("$startColor├${"─" * 98}┤$endColor");
+      int index = 0;
+      for (var s in object['stack'] as List) {
+        var line = s.toString().replaceFirst(RegExp(r'^\s*\d+\s+'), '').trim();
+        line = line.replaceAll('\n', ' ');
+        if (line.isNotEmpty) {
+          str.writeln("$startColor  ${++index}. $line$endColor");
+        }
+      }
+    } else {
+      for (var obLine in object.toString().split('\n')) {
+        str.writeln("$startColor  $obLine$endColor");
+      }
     }
+
     str.writeln(startColor + ("└${"─" * 98}┘") + endColor);
 
     print(str.toString());
@@ -203,11 +222,3 @@ class Log {
 }
 
 enum LogLevel { ERROR, WARNING, INFO, FINE, DEBUG }
-
-void main(List<String> args) {
-  Console.e("ERROR");
-  Console.w("WARNING");
-  Console.p("SUCCESS");
-  Console.i("INFO");
-  Console.json(FinchDBConfig.defaultLanguages);
-}
