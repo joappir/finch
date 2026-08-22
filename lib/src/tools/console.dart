@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:finch/finch_tools.dart';
+
 typedef LogCallback = void Function(Object? log, String type);
 
 /// A utility class for logging messages with different severity levels.
@@ -199,7 +201,8 @@ class Log {
     if (object is Map &&
         object.containsKey('error') &&
         object.containsKey('stack')) {
-      str.writeln("$startColor  ${DateTime.now()} ${object['error']}$endColor");
+      str.writeln(
+          "$startColor  $level ${DateTime.now().format('y-M-d H:m:s')} ${object['error']}$endColor");
       str.writeln("$startColor├${"─" * 98}┤$endColor");
       int index = 0;
       for (var s in object['stack'] as List) {
@@ -221,4 +224,26 @@ class Log {
   }
 }
 
-enum LogLevel { ERROR, WARNING, INFO, FINE, DEBUG }
+enum LogLevel {
+  ERROR,
+  WARNING,
+  INFO,
+  FINE,
+  DEBUG;
+
+  @override
+  String toString() {
+    switch (this) {
+      case LogLevel.ERROR:
+        return "ERROR";
+      case LogLevel.INFO:
+        return "INFO";
+      case LogLevel.FINE:
+        return "FINE";
+      case LogLevel.DEBUG:
+        return "DEBUG";
+      case LogLevel.WARNING:
+        return "WARNING";
+    }
+  }
+}
