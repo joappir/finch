@@ -194,7 +194,7 @@ class Log {
       str.writeln("$startColor├${"─" * 98}┤$endColor");
     }
     for (var obLine in object.toString().split('\n')) {
-      str.writeln("$startColor│ $obLine$endColor");
+      str.writeln("$startColor  $obLine$endColor");
     }
     str.writeln(startColor + ("└${"─" * 98}┘") + endColor);
 

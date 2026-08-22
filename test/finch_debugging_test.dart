@@ -1,9 +1,9 @@
+import 'package:finch/src/tools/http/http.dart';
 import 'package:test/test.dart';
 import 'package:finch/src/tools/console.dart';
 import 'package:finch/finch_route.dart';
 import 'package:finch/finch_app.dart';
 import 'package:finch/finch_tools.dart';
-import 'package:finch/src/tools/http/http.dart' as http;
 
 void main() async {
   FinchApp server = FinchApp(
@@ -100,7 +100,7 @@ void main() async {
 
   group("test debugger", () {
     test("checking Debugger1", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/debugger/console.js"),
       );
 
@@ -114,7 +114,7 @@ void main() async {
     });
 
     test("checking Debugger2", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/debug_test/"),
       );
       var content = req.body;
@@ -129,7 +129,7 @@ void main() async {
     });
 
     test("checking Debugger3", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/api/info"),
       );
       var content = req.body;

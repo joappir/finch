@@ -135,6 +135,12 @@ class FinchApp {
     return routing;
   }
 
+  /// Register callback action on console logger
+  FinchApp onError(LogCallback callBack) {
+    Console.onError.add(callBack);
+    return this;
+  }
+
   /// Gets the MongoDB database instance.
   /// If the database is not connected, this method will attempt to connect to MongoDB.
   /// Throws an exception if the database is not running.

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:finch/tools.dart';
 import 'package:test/test.dart';
 import 'package:finch/src/forms/advanced_form.dart';
 import 'package:finch/src/forms/form_validator.dart';
@@ -7,9 +8,7 @@ import 'package:finch/src/tools/console.dart';
 import 'package:finch/src/views/htmler.dart';
 import 'package:finch/finch_route.dart';
 import 'package:finch/finch_app.dart';
-import 'package:finch/finch_tools.dart';
 import 'package:html/parser.dart';
-import 'package:finch/src/tools/http/http.dart' as http;
 
 void main() async {
   FinchApp server = FinchApp(
@@ -356,7 +355,7 @@ void main() async {
 
   group("Finch Server Test", () {
     test("Test List Cookies", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/test_cookies/list"),
         headers: {
           'Cookie': 'test_cookie=TEST_VALUE;',
@@ -376,7 +375,7 @@ void main() async {
     });
 
     test("Test Delete Cookie by Backend", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse(
           "http://localhost:${httpServer.port}/test_cookies/delete_cookies?key=test_cookie",
         ),
@@ -397,7 +396,7 @@ void main() async {
     });
 
     test("Test 200", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}"),
       );
       expect(req.body, 'TEST', reason: "Response body should be 'TEST'");
@@ -405,7 +404,7 @@ void main() async {
     });
 
     test("Test API", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/api/info"),
       );
       var data = jsonDecode(req.body);
@@ -420,7 +419,7 @@ void main() async {
     });
 
     test('test api root path', () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/api"),
       );
       var data = jsonDecode(req.body);
@@ -434,7 +433,7 @@ void main() async {
     });
 
     test("Test API 404", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/api/notfound"),
       );
       var data = jsonDecode(req.body);
@@ -449,7 +448,7 @@ void main() async {
     });
 
     test("Test 404", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/notfound"),
       );
       var data = req.body;
@@ -463,7 +462,7 @@ void main() async {
     });
 
     test("Test Method", () async {
-      var req = await http.post(
+      var req = await FinchHttp.post(
         Uri.parse("http://localhost:${httpServer.port}/notfound"),
       );
       var data = req.body;
@@ -478,7 +477,7 @@ void main() async {
 
     test("Test POST data", () async {
       var random = Random().nextInt(100);
-      var req = await http.post(
+      var req = await FinchHttp.post(
         Uri.parse("http://localhost:${httpServer.port}/api/post"),
         body: {
           'test': 'TEST',
@@ -503,7 +502,7 @@ void main() async {
   });
 
   test("Test Authenticator OK!", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/api/auth/ok"),
     );
     var data = jsonDecode(req.body);
@@ -517,7 +516,7 @@ void main() async {
   });
 
   test("Test Authenticator FAILED!", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/api/auth/failed"),
     );
     var data = jsonDecode(req.body);
@@ -536,7 +535,7 @@ void main() async {
     var headers = {
       'Cookie': cookies,
     };
-    var req = await http.post(
+    var req = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/api/post"),
       headers: headers,
     );
@@ -565,7 +564,7 @@ void main() async {
     var headers = {
       'Cookie': cookies,
     };
-    var req = await http.post(
+    var req = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/language_cookie"),
       headers: headers,
     );
@@ -577,7 +576,7 @@ void main() async {
     expect(language, 'es', reason: "Language should be 'es'");
     expect(resCookies.first.toString(), contains('language=es;'));
 
-    req = await http.post(
+    req = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/de/language_cookie"),
       headers: headers,
     );
@@ -591,7 +590,7 @@ void main() async {
   });
 
   test("check URL", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/checkurl"),
     );
     var data = req.body;
@@ -604,7 +603,7 @@ void main() async {
   });
 
   test("check Error", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/error"),
     );
     var data = req.body;
@@ -617,7 +616,7 @@ void main() async {
   });
 
   test("check Widget events", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/widget"),
     );
     var data = req.body;
@@ -631,7 +630,7 @@ void main() async {
   });
 
   test('Test renderTag', () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/htmler"),
     );
     var html = req.body;
@@ -684,7 +683,7 @@ void main() async {
   });
 
   test('Test SSE', () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/sse"),
     );
     expect(req.status, 200, reason: "Status code should be 200");
@@ -709,14 +708,14 @@ void main() async {
   });
 
   test('Test Cache', () async {
-    var req1 = await http.get(
+    var req1 = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/without_cache_test"),
     );
-    var req2 = await http.get(
+    var req2 = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/with_cache_test"),
     );
     await Future.delayed(Duration(seconds: 1));
-    var req3 = await http.get(
+    var req3 = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/with_cache_test"),
     );
 
@@ -735,7 +734,7 @@ void main() async {
   });
 
   test('Test Advanced Form', () async {
-    var reqGet = await http.get(
+    var reqGet = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/advanced_form"),
       headers: {
         'Cookie': 'DARTSESSID=0f27deca10d6d3a19e9b5819c3f72eac;',
@@ -748,7 +747,7 @@ void main() async {
       cookies.add(reqGet.headers['set-cookie']!.join('; '));
     }
 
-    var reqPost = await http.post(
+    var reqPost = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/advanced_form"),
       headers: {
         'Cookie': cookies.join('; '),
@@ -762,7 +761,7 @@ void main() async {
     );
     var dataPost = jsonDecode(reqPost.body);
 
-    var reqPost2 = await http.post(
+    var reqPost2 = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/advanced_form"),
       headers: {
         'Cookie': cookies.join('; '),
@@ -818,7 +817,7 @@ void main() async {
         List.generate(10, (index) => Random().nextInt(26) + 97),
       );
 
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse(
           "http://localhost:${httpServer.port}/check_param_classic/$value1/$value2",
         ),
@@ -844,7 +843,7 @@ void main() async {
       var value2 = String.fromCharCodes(
         List.generate(10, (index) => Random().nextInt(26) + 97),
       );
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse(
           "http://localhost:${httpServer.port}/check_param_finch/$value1/$value2",
         ),
@@ -867,7 +866,7 @@ void main() async {
 
     test('Url segments with special characters', () async {
       String url = 'http://localhost:${httpServer.port}/%AF/test';
-      var req = await http.get(Uri.parse(url));
+      var req = await FinchHttp.get(Uri.parse(url));
       var data = jsonDecode(req.body);
       expect(
         data['key1'],
@@ -883,7 +882,7 @@ void main() async {
 
     test('Url segments with special characters 404', () async {
       String url = 'http://localhost:${httpServer.port}/%AF/test/404';
-      var req = await http.get(Uri.parse(url));
+      var req = await FinchHttp.get(Uri.parse(url));
       expect(req.status, 404, reason: "Status code should be 404");
     });
   });

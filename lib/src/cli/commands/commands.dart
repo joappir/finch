@@ -14,7 +14,7 @@ import 'package:finch/finch_app.dart';
 import 'package:archive/archive_io.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as p;
-import 'package:finch/src/tools/http/http.dart' as http;
+import 'package:finch/src/tools/http/http.dart';
 
 class ProjectCommands {
   Map<String, dynamic> finchConfigs = {};
@@ -598,7 +598,7 @@ class ProjectCommands {
     var githubUrl = 'https://api.github.com/users/uproid/repos';
     var request = await CappConsole.progress(
       "Fetching templates from GitHub",
-      () async => http.get(Uri.parse(githubUrl)),
+      () async => FinchHttp.get(Uri.parse(githubUrl)),
       type: CappProgressType.timer,
     );
 
