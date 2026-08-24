@@ -135,7 +135,6 @@ void main([List<String>? args]) async {
           ));
         }
       },
-      delayFirstMoment: true,
     ).start(),
   );
 
