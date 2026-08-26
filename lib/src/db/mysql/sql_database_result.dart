@@ -39,8 +39,8 @@ class DatabaseDriver<T> {
   Future<SqlDatabaseResult> execute(Sqler sqler) async {
     if (database is Database) {
       return _executeSqlite(database as Database, sqler);
-    } else if (database is mysql.MySQLConnection) {
-      return _executeMysql(database as mysql.MySQLConnection, sqler);
+    } else if (database is mysql.MySQLConnectionPool) {
+      return _executeMysql(database as mysql.MySQLConnectionPool, sqler);
     } else {
       throw UnsupportedError(
           'Unsupported database type: ${database.runtimeType}');
@@ -54,9 +54,9 @@ class DatabaseDriver<T> {
     if (database is Database) {
       return _executeSqliteString(database as Database, sql,
           separateStatements: separateStatements);
-    } else if (database is mysql.MySQLConnection) {
+    } else if (database is mysql.MySQLConnectionPool) {
       return _executeMysqlString(
-        database as mysql.MySQLConnection,
+        database as mysql.MySQLConnectionPool,
         sql,
         separateStatements: separateStatements,
       );
@@ -69,8 +69,8 @@ class DatabaseDriver<T> {
   Future<bool> existTable(String name) async {
     if (database is Database) {
       return _existsSqliteTable(database as Database, name);
-    } else if (database is mysql.MySQLConnection) {
-      return _existsTableMysql(database as mysql.MySQLConnection, name);
+    } else if (database is mysql.MySQLConnectionPool) {
+      return _existsTableMysql(database as mysql.MySQLConnectionPool, name);
     } else {
       throw UnsupportedError(
           'Unsupported database type: ${database.runtimeType}');
@@ -94,7 +94,7 @@ class DatabaseDriver<T> {
   }
 
   Future<MySqlResult> _executeMysql(
-    mysql.MySQLConnection conn,
+    mysql.MySQLConnectionPool conn,
     Sqler sqler,
   ) async {
     try {
@@ -147,7 +147,7 @@ class DatabaseDriver<T> {
   }
 
   Future<MySqlResult> _executeMysqlString(
-    mysql.MySQLConnection conn,
+    mysql.MySQLConnectionPool conn,
     String sql, {
     bool separateStatements = false,
   }) async {
@@ -193,7 +193,7 @@ class DatabaseDriver<T> {
   }
 
   /// Robust SQL splitter (fixed dollar-quote detection).
-  List<String> splitSqlStatements(String sql) {
+  static List<String> splitSqlStatements(String sql) {
     final List<String> out = [];
     final int n = sql.length;
     if (n == 0) return out;
@@ -447,7 +447,7 @@ class DatabaseDriver<T> {
   }
 
   Future<bool> _existsTableMysql(
-    mysql.MySQLConnection conn,
+    mysql.MySQLConnectionPool conn,
     String name,
   ) async {
     Sqler sqler = Sqler()
@@ -487,7 +487,7 @@ class DatabaseDriver<T> {
     String sql;
     if (database is Database) {
       sql = mTable.toSQL<Sqlite>();
-    } else if (database is mysql.MySQLConnection) {
+    } else if (database is mysql.MySQLConnectionPool) {
       sql = mTable.toSQL<Mysql>();
     } else {
       throw UnsupportedError(
@@ -503,9 +503,9 @@ class DatabaseDriver<T> {
         'SELECT SQLITE_VERSION()',
       );
       return row.rows.isNotEmpty;
-    } else if (database is mysql.MySQLConnection) {
-      var db = database as mysql.MySQLConnection;
-      return db.connected;
+    } else if (database is mysql.MySQLConnectionPool) {
+      var db = database as mysql.MySQLConnectionPool;
+      return db.allConnectionsQty > 0;
     } else {
       throw UnsupportedError(
         'Unsupported database type: ${database.runtimeType}',

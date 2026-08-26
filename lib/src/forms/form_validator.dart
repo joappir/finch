@@ -541,7 +541,7 @@ class FieldValidator {
   /// The validator checks whether the provided value already exists in the specified table and field.
   /// If the value exists, an error message `'error.field.unique'` is returned.
   /// Parameters:
-  /// - [db]: The MySQLConnection instance to use for the database query. (required)
+  /// - [db]: The MySQLConnectionPool instance to use for the database query. (required)
   /// - [table]: The name of the database table to check. (required)
   /// - [field]: The name of the field/column to check for uniqueness. (required)
   /// - [operator]: The comparison operator to use in the query. Defaults to `QO.EQ`.
@@ -579,7 +579,7 @@ class FieldValidator {
   /// The validator checks whether the provided value exists in the specified table and field.
   /// If the value does not exist, an error message `'error.field.relation'` is returned.
   /// Parameters:
-  /// - [db]: The MySQLConnection instance to use for the database query. (required)
+  /// - [db]: The MySQLConnectionPool instance to use for the database query. (required)
   /// - [table]: The name of the database table to check. (required)
   /// - [field]: The name of the field/column to check for relation. (required)
   /// - [operator]: The comparison operator to use in the query. Defaults to `QO.EQ`.

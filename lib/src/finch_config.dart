@@ -195,6 +195,8 @@ class FinchConfigs {
   }
 }
 
+abstract interface class DBConfig {}
+
 /// MySQL database configuration for the Finch framework.
 /// [FinchMysqlConfig] manages MySQL database connection settings and provides
 /// environment variable integration for secure credential management.
@@ -223,7 +225,7 @@ class FinchConfigs {
 ///   enable: true,
 /// );
 /// ```
-class FinchMysqlConfig {
+class FinchMysqlConfig extends DBConfig {
   bool enable = false;
   String host = 'localhost';
   int port = 3306;
@@ -232,6 +234,7 @@ class FinchMysqlConfig {
   bool secure = true;
   String databaseName = "database_name";
   String collation = 'utf8mb4_general_ci';
+  int maxConnections;
 
   FinchMysqlConfig({
     String? host,
@@ -242,6 +245,7 @@ class FinchMysqlConfig {
     String? databaseName,
     String? collation,
     bool? enable,
+    this.maxConnections = 10,
   }) {
     this.user = user ?? env.get('MYSQL_USER', 'database_username');
     this.pass = pass ?? env.get('MYSQL_PASS', 'database_password');
@@ -256,7 +260,7 @@ class FinchMysqlConfig {
   }
 }
 
-class FinchSqliteConfig {
+class FinchSqliteConfig extends DBConfig {
   bool enable = false;
   String filePath = 'database.sqlite';
 
@@ -296,10 +300,11 @@ class FinchSqliteConfig {
 ///   dbName: 'finch_db',
 ///   enable: true,
 /// );
-/// // Auto-generated connection string:
-/// // mongodb://finch_user:secure_password@localhost:27017/finch_db/?authSource=admin
+/// Auto-generated connection string:
+/// mongodb://finch_user:secure_password@localhost:27017/finch_db/?authSource=admin
 /// ```
-class FinchDBConfig {
+class FinchDBConfig extends DBConfig {
+  final int maxConnections;
   late final bool enable;
   late final String user;
   late final String pass;
@@ -319,6 +324,7 @@ class FinchDBConfig {
     String? dbName,
     String? auth,
     bool? enable,
+    this.maxConnections = 10,
   }) {
     this.user =
         user ?? env.get('MONGO_INITDB_ROOT_USERNAME', 'database_username');

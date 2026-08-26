@@ -331,8 +331,8 @@ class HomeController extends Controller {
       'title': 'logo.title',
       'year': DateTime.now().year,
       'user': await authController.userLogined?.toParams(),
-      'mongoActive': app.mongoDb.isConnected,
-      'mysqlActive': app.mysqlDb.connected,
+      'mongoActive': app.db.mongodb.isConnected,
+      'mysqlActive': app.db.mysql.isConnected,
       'version': 'v${FinchApp.info.version}',
     });
 
@@ -439,11 +439,13 @@ class HomeController extends Controller {
       },
       'Database': {
         'MongoDB connected': app.mongoDb.isConnected,
-        if (configs.isLocalDebug)
+        if (configs.isLocalDebug) ...{
           'MongoDB Host': "${configs.dbConfig.host}:${configs.dbConfig.port}",
+          'Datases': app.db.connections.join(', '),
+        },
         'MongoDB DB name': configs.dbConfig.dbName,
         'MongoDB Collections': collectionNames.join(', '),
-        'MySQL connected': app.mysqlDb.connected,
+        'MySQL connected': app.db.mysql.isConnected,
         if (configs.isLocalDebug)
           'MySQL Host':
               "${configs.mysqlConfig.host}:${configs.mysqlConfig.port}",

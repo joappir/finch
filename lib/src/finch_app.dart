@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:capp/capp.dart';
+import 'package:finch/finch_mongo_db.dart';
 import 'package:finch/mysql.dart';
 import 'package:finch/src/cli/commands/commands.dart';
+import 'package:finch/src/db/db_manager.dart';
 import 'package:finch/src/tools/convertor/widget_to_dart.dart';
 import 'package:finch/src/tools/convertor/language_to_dart.dart';
 import 'package:mysql_client_plus/mysql_client_plus.dart';
@@ -14,7 +16,6 @@ import 'package:finch/finch_route.dart';
 import 'package:finch/finch_app.dart';
 import 'package:finch/src/tools/console.dart';
 import 'package:finch/src/tools/multi_language/language.dart';
-import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:finch/finch_tools.dart';
 
 /// A comprehensive web application server framework for Dart.
@@ -61,17 +62,17 @@ class FinchApp {
   /// A boolean indicating if the server has an active WebSocket manager.
   bool get hasSocket => socketManager != null;
 
-  /// The MongoDB database instance.
-  mongo.Db? _mongoDb;
+  // Database manager
+  late DBManager db;
 
-  /// The MySQL database connection instance.
-  MySQLConnection? _mysqlDb;
-  DatabaseDriver<MySQLConnection> get mysqlDriver =>
-      DatabaseDriver<MySQLConnection>(mysqlDb);
-  DatabaseDriver<Database> get sqliteDriver =>
-      DatabaseDriver<Database>(sqliteDb);
+  /// Mysql Database Driver
+  DatabaseDriver<MySQLConnectionPool> get mysqlDriver => db.mysql.driver;
 
-  Database? _sqliteDb;
+  /// Sqite Database Driver
+  DatabaseDriver<Database> get sqliteDriver => db.sqlite.driver;
+
+  /// MongoDB Database Connection
+  Db get mongoDb => db.mongodb.db;
 
   /// A list of [FinchCron] instances representing scheduled tasks.
   final List<FinchCron> crons = [];
@@ -103,6 +104,10 @@ class FinchApp {
     this.onRequest,
   }) {
     FinchApp.config = configs;
+    db = DBManager(configs);
+    db.connectAll().onError((e, s) {
+      throw ("Error connect to DB: ${e.toString()}");
+    });
     debuggerInit();
   }
 
@@ -141,32 +146,6 @@ class FinchApp {
     return this;
   }
 
-  /// Gets the MongoDB database instance.
-  /// If the database is not connected, this method will attempt to connect to MongoDB.
-  /// Throws an exception if the database is not running.
-  mongo.Db get mongoDb {
-    if (_mongoDb == null) {
-      connectMongoDb().then((value) => _mongoDb = value);
-      throw ('Error DB is not running');
-    }
-
-    return _mongoDb!;
-  }
-
-  MySQLConnection get mysqlDb {
-    if (_mysqlDb == null || !_mysqlDb!.connected) {
-      connectMysqlDb();
-    }
-    return _mysqlDb!;
-  }
-
-  Database get sqliteDb {
-    if (_sqliteDb == null) {
-      connectSqliteDb();
-    }
-    return _sqliteDb!;
-  }
-
   /// Stops the server and closes the database connection.
   /// The [force] parameter specifies whether to forcefully close the server.
   Future stop({bool force = true}) async {
@@ -174,13 +153,7 @@ class FinchApp {
       await server!.close(force: force);
     }
 
-    await mongoDb.close();
-    await mysqlDb.close();
-    sqliteDb.close();
-
-    _mongoDb = null;
-    _mysqlDb = null;
-    _sqliteDb = null;
+    await db.closeAll();
     server = null;
   }
 
@@ -208,6 +181,7 @@ class FinchApp {
   /// If [awaitCommands] is true, it will also handle command-line inputs.
   Future<HttpServer> start([List<String>? args, bool awaitCommands = true]) {
     _args = args ?? [];
+
     if (config.noStop) {
       return runZonedGuarded(
         () => _run(args, awaitCommands: awaitCommands),
@@ -236,12 +210,6 @@ class FinchApp {
       dartLanguages: config.dartLanguages,
     ).init();
 
-    _mongoDb = await connectMongoDb().onError((_, __) {
-      throw ("Error connect to MongoDB");
-    });
-
-    await connectMysqlDb();
-
     server = await HttpServer.bind(
       config.ip,
       config.port,
@@ -254,13 +222,7 @@ class FinchApp {
         ['', '@> Finch ${FinchApp.info.version}'],
         ['Url', config.uri.toString()],
         ['Path App', pathApp],
-        if (config.dbConfig.enable && _mongoDb != null && _mongoDb!.isConnected)
-          ['MongoDB', 'Connected'],
-        if (_mysqlDb != null && mysqlDriver.connected()) ['MySQL', 'Connected'],
-        if (config.sqliteConfig.enable &&
-            _sqliteDb != null &&
-            sqliteDriver.connected())
-          ['SQLite', 'Connected'],
+        ['databases', db.connections.join(', ')],
         if (hasSocket) ['WebSocket', 'Enabled'],
         if (config.isLocalDebug) ['Debug Mode', 'Enabled'],
         if (crons.isNotEmpty) ['Cron Jobs', crons.length.toString()],
@@ -294,20 +256,6 @@ class FinchApp {
           var router = Route(routing: await getAllRoutes());
 
           runZonedGuarded(() async {
-            if (config.dbConfig.enable) {
-              if (_mongoDb == null) {
-                _mongoDb =
-                    await connectMongoDb().onError((error, stackTrace) async {
-                  throw ("Error connect to DB");
-                });
-              } else if (!_mongoDb!.isConnected) {
-                await _mongoDb!.open().onError((error, stackTrace) async {
-                  Console.e("Error connect to DB: ${config.dbConfig.link}");
-                  throw ("Error connect to DB");
-                });
-              }
-            }
-
             if (onRequest != null) {
               rq = await onRequest!(rq);
             }
@@ -862,54 +810,6 @@ class FinchApp {
     );
   }
 
-  /// Connects to MongoDB using the connection string from the configuration.
-  /// If `config.dbConfig.enable` is true, the database connection is opened.
-  /// Returns a [Future] containing the [mongo.Db] instance.
-  Future<mongo.Db> connectMongoDb() async {
-    var db = mongo.Db(config.dbConfig.link);
-    if (config.dbConfig.enable) {
-      await db.open().onError((err, stack) {
-        Console.e(err.toString());
-      });
-    }
-    return db;
-  }
-
-  /// Connects to MySQL using the connection string from the configuration.
-  Future<void> connectMysqlDb() async {
-    if (config.mysqlConfig.enable) {
-      _mysqlDb = await MySQLConnection.createConnection(
-        host: config.mysqlConfig.host,
-        port: config.mysqlConfig.port,
-        userName: config.mysqlConfig.user,
-        password: config.mysqlConfig.pass,
-        databaseName: config.mysqlConfig.databaseName,
-        secure: config.mysqlConfig.secure,
-        collation: config.mysqlConfig.collation,
-      );
-      _mysqlDb!.onClose(
-        () => Console.e("MySQL connection closed"),
-      );
-      if (config.mysqlConfig.enable) {
-        await _mysqlDb!.connect().onError((err, stack) {
-          Console.e(err.toString());
-        });
-      }
-    }
-  }
-
-  /// Connects to SQLite using the connection string from the configuration.
-  Future<void> connectSqliteDb() async {
-    if (config.sqliteConfig.enable) {
-      try {
-        _sqliteDb = sqlite3.open(config.sqliteConfig.filePath);
-      } catch (e) {
-        Console.e("Error connecting to SQLite: $e");
-        _sqliteDb = null;
-      }
-    }
-  }
-
   /// Registers a [FinchCron] instance to be scheduled.
   /// The [cron] parameter is the [FinchCron] instance to be registered.
   void registerCron(FinchCron cron) {
@@ -972,6 +872,7 @@ class FinchApp {
   /// when [debuggerInit] is called multiple times.
   var _isDebuggerInit = false;
 
+  /// Register all dart file migrations into app
   FinchApp registerDartMigration(List<DartMigration> migrations) {
     // validate unique migration names
     for (var migration in migrations) {
@@ -1279,7 +1180,7 @@ class FinchApp {
     if (c.existsOption('init')) {
       var res = await CappConsole.progress<List<String>>(
         "Initializing migration...",
-        () async => MysqlMigration(mysqlDriver)
+        () async => MysqlMigration(db.mysql.driver)
             .migrateInit(
                 migrations: _dartMigrations
                     .where((m) => m.target == MigrationTarget.mysql)
@@ -1326,7 +1227,7 @@ class FinchApp {
       int deep = c.getOption('rollback', def: '1').toInt(def: 1);
       var res = await CappConsole.progress<List<String>>(
         "Rolling back migration...",
-        () async => MysqlMigration(mysqlDriver)
+        () async => MysqlMigration(db.mysql.driver)
             .migrateRollback(deep,
                 dartMigrations: _dartMigrations
                     .where((m) => m.target == MigrationTarget.mysql)
@@ -1356,7 +1257,7 @@ class FinchApp {
     }
 
     if (c.existsOption('list')) {
-      var res = await MysqlMigration(mysqlDriver).checkMigrationStatus(
+      var res = await MysqlMigration(db.mysql.driver).checkMigrationStatus(
           migrations: _dartMigrations
               .where((m) => m.target == MigrationTarget.mysql)
               .toList());
