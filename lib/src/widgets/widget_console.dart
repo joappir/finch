@@ -842,7 +842,134 @@ class DebuggerStatusBar {
         font-size: 12px;
         opacity: 0.8;
       }
-      
+
+      /* Terminal Panel Styles */
+      .wa-console .terminal-modal-content {
+        display: flex;
+        flex-direction: column;
+        height: 500px;
+        width: 90%;
+        max-width: 1000px;
+        transition: width 0.2s ease, height 0.2s ease, max-width 0.2s ease, max-height 0.2s ease;
+      }
+
+      .wa-console .terminal-modal-content.fullscreen {
+        width: 96vw;
+        max-width: 96vw;
+        height: 92vh;
+        max-height: 92vh;
+      }
+
+      .wa-console .terminal-zoom-btn {
+        background: none;
+        border: none;
+        color: #71717a;
+        font-size: 14px;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 3px;
+        transition: all 0.2s ease;
+        margin-right: 4px;
+      }
+
+      .wa-console .terminal-zoom-btn:hover {
+        background: rgba(99, 102, 241, 0.15);
+        color: #e2e8f0;
+      }
+
+      .wa-console .terminal-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 12px 16px;
+        overflow: hidden;
+      }
+
+      .wa-console .terminal-status {
+        font-size: 10px;
+        color: #71717a;
+        margin-bottom: 8px;
+      }
+
+      .wa-console .terminal-status.connected {
+        color: #34d399;
+      }
+
+      .wa-console .terminal-status.disconnected {
+        color: #f87171;
+      }
+
+      .wa-console .terminal-output {
+        flex: 1;
+        overflow-y: auto;
+        background: #080a0f;
+        border: 1px solid #1e2030;
+        border-radius: 3px;
+        padding: 10px 12px;
+        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+        font-size: 11px;
+        color: #c4b5fd;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.4;
+      }
+
+      .wa-console .terminal-line {
+        min-height: 1.4em;
+      }
+
+      .wa-console .terminal-line-in {
+        color: #34d399;
+      }
+
+      .wa-console .terminal-line-err {
+        color: #f87171;
+      }
+
+      .wa-console .terminal-input-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .wa-console .terminal-input {
+        flex: 1;
+        background: #0f1117;
+        border: 1px solid #1e2030;
+        border-radius: 3px;
+        color: #e2e8f0;
+        padding: 8px 10px;
+        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+        font-size: 12px;
+        outline: none;
+      }
+
+      .wa-console .terminal-input:focus {
+        border-color: rgba(99, 102, 241, 0.5);
+      }
+
+      .wa-console .terminal-send-btn {
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #e2e8f0;
+        padding: 8px 14px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .wa-console .terminal-send-btn:hover {
+        background: rgba(99, 102, 241, 0.3);
+      }
+
       @media (max-width: 768px) {
         .wa-console #debugger-container {
           height: 32px !important;
@@ -1193,12 +1320,14 @@ class DebuggerStatusBar {
     this.routesBtn = this.createDropdownItem('./', 'Routes');
     this.variablesBtn = this.createDropdownItem('{}', 'Variables');
     this.reinitBtn = this.createDropdownItem('@', 'Reinit');
+    this.terminalBtn = this.createDropdownItem('>_', 'Terminal');
     // this.settingsBtn = this.createDropdownItem('A', 'Settings');
-    
+
     panelSection.appendChild(this.consoleBtn);
     panelSection.appendChild(this.routesBtn);
     panelSection.appendChild(this.variablesBtn);
     panelSection.appendChild(this.reinitBtn);
+    panelSection.appendChild(this.terminalBtn);
     // panelSection.appendChild(this.settingsBtn);
     
     // Assemble dropdown
@@ -1319,6 +1448,11 @@ class DebuggerStatusBar {
     });
     this.reinitBtn.addEventListener('click', () => {
       window.socketDebugger.send(JSON.stringify({ path: 'reinit' }));
+      this.closeDropdown();
+    });
+
+    this.terminalBtn.addEventListener('click', () => {
+      this.openTerminal();
       this.closeDropdown();
     });
     // this.settingsBtn.addEventListener('click', () => {
@@ -1854,6 +1988,358 @@ class DebuggerStatusBar {
     event.target.classList.add('active');
   const content = this.shadow.querySelector('#' + tabName + '-tab');
   if (content) content.classList.add('active');
+  }
+
+  openTerminal() {
+    const existingModal = this.shadow.querySelector('.terminal-modal');
+    if (existingModal) {
+      existingModal.classList.add('active');
+      this.terminalWantsConnection = true;
+      this.connectTerminalSocket();
+      if (this.terminalInputElement) this.terminalInputElement.focus();
+      return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'console-modal terminal-modal';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'console-modal-content terminal-modal-content';
+    this.terminalModalContentElement = modalContent;
+
+    const header = document.createElement('div');
+    header.className = 'console-modal-header';
+
+    const title = document.createElement('h3');
+    title.className = 'console-modal-title';
+    title.textContent = 'DEBUG CONSOLE - TERMINAL';
+
+    const zoomBtn = document.createElement('button');
+    zoomBtn.className = 'terminal-zoom-btn';
+    zoomBtn.innerHTML = '⛶';
+    zoomBtn.title = 'Toggle fullscreen';
+    zoomBtn.addEventListener('click', () => this.toggleTerminalFullscreen());
+    this.terminalZoomBtn = zoomBtn;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'console-modal-close';
+    closeBtn.innerHTML = 'X';
+    closeBtn.addEventListener('click', () => this.closeTerminal());
+
+    const headerActions = document.createElement('div');
+    headerActions.style.cssText = 'display:flex;align-items:center;';
+    headerActions.appendChild(zoomBtn);
+    headerActions.appendChild(closeBtn);
+
+    header.appendChild(title);
+    header.appendChild(headerActions);
+
+    const body = document.createElement('div');
+    body.className = 'terminal-body';
+
+    const status = document.createElement('div');
+    status.className = 'terminal-status';
+    status.textContent = 'Connecting...';
+    this.terminalStatusElement = status;
+
+    const output = document.createElement('div');
+    output.className = 'terminal-output';
+    this.terminalOutputElement = output;
+
+    const inputRow = document.createElement('div');
+    inputRow.className = 'terminal-input-row';
+
+    const input = document.createElement('input');
+    input.className = 'terminal-input';
+    input.type = 'text';
+    input.placeholder = "Type a command and press Enter (help, clear, ...)";
+    this.terminalInputElement = input;
+
+    const sendBtn = document.createElement('button');
+    sendBtn.className = 'terminal-send-btn';
+    sendBtn.textContent = 'Send';
+
+    const send = () => this.sendTerminalCommand();
+    sendBtn.addEventListener('click', send);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') send();
+    });
+
+    inputRow.appendChild(input);
+    inputRow.appendChild(sendBtn);
+
+    body.appendChild(status);
+    body.appendChild(output);
+    body.appendChild(inputRow);
+
+    modalContent.appendChild(header);
+    modalContent.appendChild(body);
+    modal.appendChild(modalContent);
+
+  this.mainContainer.appendChild(modal);
+
+    setTimeout(() => {
+      modal.classList.add('active');
+    }, 10);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.closeTerminal();
+      }
+    });
+
+    // Escape restores from fullscreen first, only closing the panel on a
+    // second press (matches the console-modal's own Escape-to-close).
+    this.terminalEscapeHandler = (e) => {
+      if (e.key !== 'Escape') return;
+      if (modalContent.classList.contains('fullscreen')) {
+        this.toggleTerminalFullscreen();
+      } else {
+        this.closeTerminal();
+      }
+    };
+    document.addEventListener('keydown', this.terminalEscapeHandler);
+
+    this.terminalWantsConnection = true;
+    this.resetTerminalAnsiState();
+    this.connectTerminalSocket();
+    input.focus();
+  }
+
+  toggleTerminalFullscreen() {
+    if (!this.terminalModalContentElement) return;
+    const isFullscreen =
+      this.terminalModalContentElement.classList.toggle('fullscreen');
+    if (this.terminalZoomBtn) {
+      this.terminalZoomBtn.innerHTML = isFullscreen ? '⛶' : '⛶';
+      this.terminalZoomBtn.title =
+        isFullscreen ? 'Restore size' : 'Toggle fullscreen';
+    }
+  }
+
+  closeTerminal() {
+  const modal = this.shadow.querySelector('.terminal-modal');
+    if (modal) {
+      modal.classList.remove('active');
+    }
+    this.terminalWantsConnection = false;
+    if (this.terminalSocket) {
+      this.terminalSocket.close();
+      this.terminalSocket = null;
+    }
+    if (this.terminalEscapeHandler) {
+      document.removeEventListener('keydown', this.terminalEscapeHandler);
+      this.terminalEscapeHandler = null;
+    }
+  }
+
+  // Foreground/background colors for standard + bright ANSI SGR codes, so
+  // colored output from CappConsole (warnings, errors, tables, ...) renders
+  // with real colors instead of raw escape bytes.
+  terminalAnsiFg() {
+    return {
+      30: '#1a1c25', 31: '#f87171', 32: '#34d399', 33: '#fbbf24',
+      34: '#60a5fa', 35: '#c084fc', 36: '#22d3ee', 37: '#e2e8f0',
+      90: '#71717a', 91: '#fca5a5', 92: '#6ee7b7', 93: '#fde047',
+      94: '#93c5fd', 95: '#e9d5ff', 96: '#67e8f9', 97: '#f8fafc',
+    };
+  }
+
+  terminalAnsiBg() {
+    return {
+      40: '#000000', 41: '#dc2626', 42: '#059669', 43: '#d97706',
+      44: '#2563eb', 45: '#9333ea', 46: '#0891b2', 47: '#e2e8f0',
+      100: '#3f3f46', 101: '#f87171', 102: '#34d399', 103: '#fbbf24',
+      104: '#60a5fa', 105: '#c084fc', 106: '#22d3ee', 107: '#f8fafc',
+    };
+  }
+
+  resetTerminalAnsiState() {
+    this.terminalAnsiState = { fg: null, bg: null, bold: false };
+    this.terminalPendingEscape = '';
+    this.terminalCurrentLineEl = null;
+  }
+
+  applyAnsiSgr(params) {
+    if (!this.terminalAnsiState) this.resetTerminalAnsiState();
+    const fg = this.terminalAnsiFg();
+    const bg = this.terminalAnsiBg();
+    const codes = params === '' ? [0] : params.split(';').map(n => parseInt(n, 10));
+    for (const code of codes) {
+      if (isNaN(code) || code === 0) {
+        this.terminalAnsiState = { fg: null, bg: null, bold: false };
+      } else if (code === 1) {
+        this.terminalAnsiState.bold = true;
+      } else if (code === 22) {
+        this.terminalAnsiState.bold = false;
+      } else if (code === 39) {
+        this.terminalAnsiState.fg = null;
+      } else if (code === 49) {
+        this.terminalAnsiState.bg = null;
+      } else if (fg[code]) {
+        this.terminalAnsiState.fg = fg[code];
+      } else if (bg[code]) {
+        this.terminalAnsiState.bg = bg[code];
+      }
+    }
+  }
+
+  terminalEnsureLine() {
+    if (!this.terminalCurrentLineEl) {
+      this.terminalCurrentLineEl = document.createElement('div');
+      this.terminalCurrentLineEl.className = 'terminal-line';
+      this.terminalOutputElement.appendChild(this.terminalCurrentLineEl);
+    }
+    return this.terminalCurrentLineEl;
+  }
+
+  terminalAppendStyledText(str) {
+    if (str === '') return;
+    const line = this.terminalEnsureLine();
+    const span = document.createElement('span');
+    const style = this.terminalAnsiState;
+    if (style.bold) span.style.fontWeight = '700';
+    if (style.fg) span.style.color = style.fg;
+    if (style.bg) {
+      span.style.backgroundColor = style.bg;
+      span.style.padding = '0 2px';
+    }
+    span.textContent = str;
+    line.appendChild(span);
+  }
+
+  // Renders a raw chunk of process output: interprets ANSI SGR color codes,
+  // a carriage return as an in-place line overwrite (used by CappConsole's
+  // progress spinners), an ANSI clear-screen sequence as a real screen clear
+  // (CappConsole.clear()), and carries any escape sequence split across
+  // WebSocket messages over to the next chunk instead of printing it as
+  // garbage.
+  writeTerminalChunk(rawText) {
+    if (!this.terminalOutputElement) return;
+    if (!this.terminalAnsiState) this.resetTerminalAnsiState();
+
+    const text = (this.terminalPendingEscape || '') + rawText;
+    this.terminalPendingEscape = '';
+
+    const tokenPattern = /\\x1B\\[[0-?]*[ -\\/]*[@-~]|\\r\\n|\\r|\\n/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = tokenPattern.exec(text)) !== null) {
+      this.terminalAppendStyledText(text.slice(lastIndex, match.index));
+      lastIndex = tokenPattern.lastIndex;
+      const token = match[0];
+
+      if (token === '\\n' || token === '\\r\\n') {
+        this.terminalCurrentLineEl = null;
+      } else if (token === '\\r') {
+        if (this.terminalCurrentLineEl) {
+          this.terminalCurrentLineEl.innerHTML = '';
+        }
+      } else {
+        const finalByte = token[token.length - 1];
+        if (finalByte === 'm') {
+          this.applyAnsiSgr(token.slice(2, -1));
+        } else if (finalByte === 'J') {
+          this.terminalOutputElement.innerHTML = '';
+          this.terminalCurrentLineEl = null;
+        }
+        // Cursor movement/visibility sequences etc. carry no meaning in a
+        // scrolling log view, so they're dropped silently.
+      }
+    }
+
+    const remaining = text.slice(lastIndex);
+    const escStart = remaining.lastIndexOf('\\x1B');
+    if (escStart !== -1 && (remaining.length - escStart) < 64) {
+      this.terminalAppendStyledText(remaining.slice(0, escStart));
+      this.terminalPendingEscape = remaining.slice(escStart);
+    } else {
+      this.terminalAppendStyledText(remaining);
+    }
+
+    this.terminalOutputElement.scrollTop = this.terminalOutputElement.scrollHeight;
+  }
+
+  appendTerminalLine(text, cls) {
+    if (!this.terminalOutputElement) return;
+    const line = document.createElement('div');
+    line.className = cls ? 'terminal-line ' + cls : 'terminal-line';
+    line.textContent = text;
+    this.terminalOutputElement.appendChild(line);
+    // Status/echo lines are always their own complete line, so any
+    // in-progress streamed line resumes fresh below them.
+    this.terminalCurrentLineEl = null;
+    this.terminalOutputElement.scrollTop = this.terminalOutputElement.scrollHeight;
+  }
+
+  connectTerminalSocket() {
+    if (this.terminalSocket &&
+        (this.terminalSocket.readyState === WebSocket.OPEN ||
+         this.terminalSocket.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
+
+    const port = window.FINCH_TERMINAL_PORT;
+    if (!port) {
+      if (this.terminalStatusElement) {
+        this.terminalStatusElement.textContent =
+          "Terminal not available. Run the project with 'finch serve'.";
+        this.terminalStatusElement.className = 'terminal-status disconnected';
+      }
+      return;
+    }
+
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = protocol + '//' + location.hostname + ':' + port;
+
+    try {
+      this.terminalSocket = new WebSocket(url);
+    } catch (e) {
+      this.appendTerminalLine('Failed to connect: ' + e, 'terminal-line-err');
+      return;
+    }
+
+    this.terminalSocket.onopen = () => {
+      this.resetTerminalAnsiState();
+      if (this.terminalStatusElement) {
+        this.terminalStatusElement.textContent = 'Connected to ' + url;
+        this.terminalStatusElement.className = 'terminal-status connected';
+      }
+    };
+
+    this.terminalSocket.onmessage = (e) => {
+      this.writeTerminalChunk(e.data);
+    };
+
+    this.terminalSocket.onclose = () => {
+      if (this.terminalStatusElement) {
+        this.terminalStatusElement.textContent = 'Disconnected. Reconnecting in 3s...';
+        this.terminalStatusElement.className = 'terminal-status disconnected';
+      }
+      if (this.terminalWantsConnection) {
+        setTimeout(() => this.connectTerminalSocket(), 3000);
+      }
+    };
+
+    this.terminalSocket.onerror = () => {
+      this.appendTerminalLine('WebSocket error', 'terminal-line-err');
+    };
+  }
+
+  sendTerminalCommand() {
+    if (!this.terminalInputElement) return;
+    const value = this.terminalInputElement.value;
+    if (!value.trim()) return;
+
+    if (this.terminalSocket && this.terminalSocket.readyState === WebSocket.OPEN) {
+      this.terminalSocket.send(value);
+      this.appendTerminalLine('> ' + value, 'terminal-line-in');
+    } else {
+      this.appendTerminalLine('Not connected to terminal', 'terminal-line-err');
+    }
+
+    this.terminalInputElement.value = '';
   }
 }
 

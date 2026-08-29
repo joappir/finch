@@ -765,8 +765,15 @@ class FinchApp {
                   ]
                 ]);
               }
-
-              CappConsole.writeTable(table, color: CappColors.success);
+              if (c.existsOption('json')) {
+                return CappConsole.writeJson(
+                  routes,
+                  pretty: true,
+                  color: CappColors.success,
+                );
+              } else {
+                CappConsole.writeTable(table, color: CappColors.success);
+              }
               return CappConsole.empty;
             },
             options: [
@@ -780,6 +787,11 @@ class FinchApp {
                 name: 'detail',
                 shortName: 'd',
                 description: 'Show more details of routes',
+              ),
+              CappOption(
+                name: 'json',
+                shortName: 'j',
+                description: 'Show more details in JSON format',
               ),
             ],
           ),
@@ -1007,8 +1019,16 @@ class FinchApp {
               FinchRoute(
                 path: 'console.js',
                 index: () async {
+                  // Set by the `finch serve` CLI process on the child app's
+                  // environment so the browser debugger can connect its
+                  // terminal panel directly to that WebSocket port.
+                  var terminalPort = int.tryParse(
+                      Platform.environment['FINCH_TERMINAL_PORT'] ?? '');
+                  var terminalPortScript = terminalPort != null
+                      ? 'window.FINCH_TERMINAL_PORT = $terminalPort;\n'
+                      : '';
                   return Context.rq.renderString(
-                    text: ConsoleWidget().layout,
+                    text: '$terminalPortScript${ConsoleWidget().layout}',
                     contentType: ContentType(
                       'text',
                       'javascript',
