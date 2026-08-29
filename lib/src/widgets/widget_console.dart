@@ -501,6 +501,25 @@ class DebuggerStatusBar {
         overflow-y: auto;
         color: #e2e8f0;
         background: #0f1117;
+        scrollbar-width: thin;
+        scrollbar-color: #2a2d3a #0f1117;
+      }
+
+      .wa-console .console-modal-body::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .wa-console .console-modal-body::-webkit-scrollbar-track {
+        background: #0f1117;
+      }
+
+      .wa-console .console-modal-body::-webkit-scrollbar-thumb {
+        background: #2a2d3a;
+        border-radius: 4px;
+      }
+
+      .wa-console .console-modal-body::-webkit-scrollbar-thumb:hover {
+        background: #3a3d4a;
       }
       
       .wa-console .error-summary {
@@ -917,6 +936,25 @@ class DebuggerStatusBar {
         white-space: pre-wrap;
         word-break: break-word;
         line-height: 1.4;
+        scrollbar-width: thin;
+        scrollbar-color: #2a2d3a #080a0f;
+      }
+
+      .wa-console .terminal-output::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .wa-console .terminal-output::-webkit-scrollbar-track {
+        background: #080a0f;
+      }
+
+      .wa-console .terminal-output::-webkit-scrollbar-thumb {
+        background: #2a2d3a;
+        border-radius: 4px;
+      }
+
+      .wa-console .terminal-output::-webkit-scrollbar-thumb:hover {
+        background: #3a3d4a;
       }
 
       .wa-console .terminal-line {
@@ -964,6 +1002,124 @@ class DebuggerStatusBar {
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+      }
+
+      /* Dart DevTools Panel Styles */
+      .wa-console .devtools-modal-content {
+        display: flex;
+        flex-direction: column;
+        height: 85vh;
+        width: 95%;
+        max-width: 1600px;
+        transition: width 0.2s ease, height 0.2s ease, max-width 0.2s ease, max-height 0.2s ease;
+      }
+
+      .wa-console .devtools-modal-content.fullscreen {
+        width: 98vw;
+        max-width: 98vw;
+        height: 96vh;
+        max-height: 96vh;
+      }
+
+      .wa-console .devtools-header-btn {
+        background: none;
+        border: none;
+        color: #71717a;
+        font-size: 14px;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 3px;
+        transition: all 0.2s ease;
+        margin-right: 4px;
+      }
+
+      .wa-console .devtools-header-btn:hover {
+        background: rgba(99, 102, 241, 0.15);
+        color: #e2e8f0;
+      }
+
+      .wa-console .devtools-iframe-wrap {
+        flex: 1;
+        overflow: hidden;
+        background: #0f1117;
+        position: relative;
+      }
+
+      .wa-console .devtools-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+      }
+
+      .wa-console .devtools-note {
+        font-size: 10px;
+        color: #71717a;
+        padding: 8px 16px 0 16px;
+      }
+
+      .wa-console .devtools-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: #0f1117;
+        color: #a1a1aa;
+        font-size: 12px;
+        text-align: center;
+        padding: 24px;
+      }
+
+      .wa-console .devtools-spinner {
+        width: 28px;
+        height: 28px;
+        border: 3px solid rgba(99, 102, 241, 0.2);
+        border-top-color: #6366f1;
+        border-radius: 50%;
+        animation: devtools-spin 0.8s linear infinite;
+      }
+
+      @keyframes devtools-spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .wa-console .devtools-error-title {
+        color: #f87171;
+        font-weight: 600;
+        font-size: 13px;
+      }
+
+      .wa-console .devtools-error-code {
+        background: #080a0f;
+        border: 1px solid #1e2030;
+        border-radius: 3px;
+        padding: 6px 10px;
+        font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+        font-size: 11px;
+        color: #c4b5fd;
+      }
+
+      .wa-console .devtools-retry-btn {
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #e2e8f0;
+        padding: 6px 14px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .wa-console .devtools-retry-btn:hover {
+        background: rgba(99, 102, 241, 0.3);
       }
 
       .wa-console .terminal-send-btn:hover {
@@ -1320,6 +1476,7 @@ class DebuggerStatusBar {
     this.routesBtn = this.createDropdownItem('./', 'Routes');
     this.variablesBtn = this.createDropdownItem('{}', 'Variables');
     this.reinitBtn = this.createDropdownItem('@', 'Reinit');
+    this.devtoolsBtn = this.createDropdownItem('<>', 'Dart DevTools');
     this.terminalBtn = this.createDropdownItem('>_', 'Terminal');
     // this.settingsBtn = this.createDropdownItem('A', 'Settings');
 
@@ -1327,6 +1484,7 @@ class DebuggerStatusBar {
     panelSection.appendChild(this.routesBtn);
     panelSection.appendChild(this.variablesBtn);
     panelSection.appendChild(this.reinitBtn);
+    panelSection.appendChild(this.devtoolsBtn);
     panelSection.appendChild(this.terminalBtn);
     // panelSection.appendChild(this.settingsBtn);
     
@@ -1448,6 +1606,11 @@ class DebuggerStatusBar {
     });
     this.reinitBtn.addEventListener('click', () => {
       window.socketDebugger.send(JSON.stringify({ path: 'reinit' }));
+      this.closeDropdown();
+    });
+
+    this.devtoolsBtn.addEventListener('click', () => {
+      this.openDevTools();
       this.closeDropdown();
     });
 
@@ -1991,6 +2154,11 @@ class DebuggerStatusBar {
   }
 
   openTerminal() {
+    if (!this.terminalCommandHistory) {
+      this.terminalCommandHistory = [];
+      this.terminalHistoryIndex = 0;
+    }
+
     const existingModal = this.shadow.querySelector('.terminal-modal');
     if (existingModal) {
       existingModal.classList.add('active');
@@ -2062,7 +2230,15 @@ class DebuggerStatusBar {
     const send = () => this.sendTerminalCommand();
     sendBtn.addEventListener('click', send);
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') send();
+      if (e.key === 'Enter') {
+        send();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.terminalHistoryUp();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        this.terminalHistoryDown();
+      }
     });
 
     inputRow.appendChild(input);
@@ -2332,6 +2508,15 @@ class DebuggerStatusBar {
     const value = this.terminalInputElement.value;
     if (!value.trim()) return;
 
+    if (!this.terminalCommandHistory) {
+      this.terminalCommandHistory = [];
+      this.terminalHistoryIndex = 0;
+    }
+    if (this.terminalCommandHistory[this.terminalCommandHistory.length - 1] !== value) {
+      this.terminalCommandHistory.push(value);
+    }
+    this.terminalHistoryIndex = this.terminalCommandHistory.length;
+
     if (this.terminalSocket && this.terminalSocket.readyState === WebSocket.OPEN) {
       this.terminalSocket.send(value);
       this.appendTerminalLine('> ' + value, 'terminal-line-in');
@@ -2340,6 +2525,241 @@ class DebuggerStatusBar {
     }
 
     this.terminalInputElement.value = '';
+  }
+
+  // Arrow Up/Down browse terminalCommandHistory the same way a real shell
+  // does. terminalHistoryIndex === history.length means "not browsing" (a
+  // fresh, empty line) — mirrors the CLI's own stdin history in commands.dart.
+  terminalHistoryUp() {
+    if (!this.terminalCommandHistory || this.terminalCommandHistory.length === 0) return;
+    if (this.terminalHistoryIndex > 0) {
+      this.terminalHistoryIndex--;
+      this.terminalInputElement.value = this.terminalCommandHistory[this.terminalHistoryIndex];
+      this.terminalMoveCursorToEnd();
+    }
+  }
+
+  terminalHistoryDown() {
+    if (!this.terminalCommandHistory) return;
+    if (this.terminalHistoryIndex < this.terminalCommandHistory.length - 1) {
+      this.terminalHistoryIndex++;
+      this.terminalInputElement.value = this.terminalCommandHistory[this.terminalHistoryIndex];
+    } else {
+      this.terminalHistoryIndex = this.terminalCommandHistory.length;
+      this.terminalInputElement.value = '';
+    }
+    this.terminalMoveCursorToEnd();
+  }
+
+  terminalMoveCursorToEnd() {
+    const input = this.terminalInputElement;
+    const len = input.value.length;
+    input.setSelectionRange(len, len);
+  }
+
+  // The Dart VM service (and its bundled DevTools web app) defaults to port
+  // 8181 when the app is started with `--enable-vm-service` and no explicit
+  // port, which is exactly what `finch serve` does — see docker-compose.yaml
+  // and the Dockerfile, which both hardcode this same port.
+  getDevToolsUrl() {
+    const httpProtocol = location.protocol === 'https:' ? 'https:' : 'http:';
+    const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const port = window.FINCH_VM_SERVICE_PORT || 8181;
+    const host = location.hostname;
+    return httpProtocol + '//' + host + ':' + port + '/devtools/?uri=' +
+      wsProtocol + '//' + host + ':' + port + '/ws';
+  }
+
+  openDevTools() {
+    const existingModal = this.shadow.querySelector('.devtools-modal');
+    if (existingModal) {
+      existingModal.classList.add('active');
+      this.loadDevTools();
+      return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'console-modal devtools-modal';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'console-modal-content devtools-modal-content';
+    this.devtoolsModalContentElement = modalContent;
+
+    const header = document.createElement('div');
+    header.className = 'console-modal-header';
+
+    const title = document.createElement('h3');
+    title.className = 'console-modal-title';
+    title.textContent = 'DEBUG CONSOLE - DART DEVTOOLS';
+
+    const openBtn = document.createElement('button');
+    openBtn.className = 'devtools-header-btn';
+    openBtn.innerHTML = '↗';
+    openBtn.title = 'Open in a new tab';
+    openBtn.addEventListener('click', () => {
+      window.open(this.getDevToolsUrl(), '_blank');
+    });
+
+    const zoomBtn = document.createElement('button');
+    zoomBtn.className = 'devtools-header-btn';
+    zoomBtn.innerHTML = '⛶';
+    zoomBtn.title = 'Toggle fullscreen';
+    zoomBtn.addEventListener('click', () => this.toggleDevToolsFullscreen());
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'console-modal-close';
+    closeBtn.innerHTML = 'X';
+    closeBtn.addEventListener('click', () => this.closeDevTools());
+
+    const headerActions = document.createElement('div');
+    headerActions.style.cssText = 'display:flex;align-items:center;';
+    headerActions.appendChild(openBtn);
+    headerActions.appendChild(zoomBtn);
+    headerActions.appendChild(closeBtn);
+
+    header.appendChild(title);
+    header.appendChild(headerActions);
+
+    const note = document.createElement('div');
+    note.className = 'devtools-note';
+    note.textContent =
+      "Dart VM service / DevTools on port " + (window.FINCH_VM_SERVICE_PORT || 8181) +
+      ". Enabled automatically by 'finch serve'.";
+
+    const iframeWrap = document.createElement('div');
+    iframeWrap.className = 'devtools-iframe-wrap';
+
+    const iframe = document.createElement('iframe');
+    iframe.className = 'devtools-iframe';
+    iframe.style.display = 'none';
+    iframe.setAttribute('allow', 'clipboard-read; clipboard-write');
+    this.devtoolsIframeElement = iframe;
+
+    const loading = document.createElement('div');
+    loading.className = 'devtools-overlay';
+    loading.innerHTML =
+      '<div class="devtools-spinner"></div><div>Loading Dart DevTools...</div>';
+    this.devtoolsLoadingElement = loading;
+
+    const error = document.createElement('div');
+    error.className = 'devtools-overlay';
+    error.style.display = 'none';
+    this.devtoolsErrorElement = error;
+
+    iframeWrap.appendChild(iframe);
+    iframeWrap.appendChild(loading);
+    iframeWrap.appendChild(error);
+
+    modalContent.appendChild(header);
+    modalContent.appendChild(note);
+    modalContent.appendChild(iframeWrap);
+    modal.appendChild(modalContent);
+
+  this.mainContainer.appendChild(modal);
+
+    setTimeout(() => {
+      modal.classList.add('active');
+    }, 10);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.closeDevTools();
+      }
+    });
+
+    this.devtoolsEscapeHandler = (e) => {
+      if (e.key !== 'Escape') return;
+      if (modalContent.classList.contains('fullscreen')) {
+        this.toggleDevToolsFullscreen();
+      } else {
+        this.closeDevTools();
+      }
+    };
+    document.addEventListener('keydown', this.devtoolsEscapeHandler);
+
+    this.loadDevTools();
+  }
+
+  // Cross-origin iframes fire 'load' even on a browser network-error page,
+  // so a plain onload can't tell "DevTools rendered" apart from "connection
+  // refused". A no-cors probe request resolves only if something actually
+  // answers on that host/port, which gives a real reachability check before
+  // committing the iframe to it — then the iframe's own 'load' event just
+  // clears the spinner once the (now known-good) app finishes rendering.
+  loadDevTools() {
+    if (!this.devtoolsIframeElement) return;
+    const port = window.FINCH_VM_SERVICE_PORT || 8181;
+    const url = this.getDevToolsUrl();
+    const probeUrl =
+      (location.protocol === 'https:' ? 'https:' : 'http:') +
+      '//' + location.hostname + ':' + port + '/';
+
+    this.devtoolsIframeElement.style.display = 'none';
+    if (this.devtoolsErrorElement) this.devtoolsErrorElement.style.display = 'none';
+    if (this.devtoolsLoadingElement) {
+      this.devtoolsLoadingElement.innerHTML =
+        '<div class="devtools-spinner"></div><div>Loading Dart DevTools...</div>';
+      this.devtoolsLoadingElement.style.display = 'flex';
+    }
+
+    const timeout = (ms) => new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('timeout')), ms);
+    });
+
+    Promise.race([
+      fetch(probeUrl, { mode: 'no-cors', cache: 'no-store' }),
+      timeout(6000),
+    ]).then(() => {
+      this.devtoolsIframeElement.onload = () => {
+        // DevTools is a Flutter web app that keeps bootstrapping for a bit
+        // after the raw iframe 'load' event fires, so give it a short grace
+        // period before swapping away from the spinner — otherwise the
+        // spinner disappears too early and reveals a blank frame while the
+        // app is still rendering.
+        setTimeout(() => {
+          if (this.devtoolsLoadingElement) this.devtoolsLoadingElement.style.display = 'none';
+          this.devtoolsIframeElement.style.display = 'block';
+        }, 1500);
+      };
+      this.devtoolsIframeElement.src = url;
+    }).catch(() => {
+      this.showDevToolsError(port);
+    });
+  }
+
+  showDevToolsError(port) {
+    if (!this.devtoolsErrorElement) return;
+    this.devtoolsErrorElement.innerHTML =
+      '<div class="devtools-error-title">Could not reach Dart DevTools on port ' + port + '</div>' +
+      '<div>Make sure the app was started with the VM service enabled and bound to all interfaces:</div>' +
+      '<div class="devtools-error-code">--enable-vm-service=' + port + '/0.0.0.0</div>' +
+      "<div>This is set automatically when the app is started with 'finch serve'.</div>";
+
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'devtools-retry-btn';
+    retryBtn.textContent = 'Retry';
+    retryBtn.addEventListener('click', () => this.loadDevTools());
+    this.devtoolsErrorElement.appendChild(retryBtn);
+
+    this.devtoolsErrorElement.style.display = 'flex';
+    if (this.devtoolsLoadingElement) this.devtoolsLoadingElement.style.display = 'none';
+    if (this.devtoolsIframeElement) this.devtoolsIframeElement.style.display = 'none';
+  }
+
+  toggleDevToolsFullscreen() {
+    if (!this.devtoolsModalContentElement) return;
+    this.devtoolsModalContentElement.classList.toggle('fullscreen');
+  }
+
+  closeDevTools() {
+  const modal = this.shadow.querySelector('.devtools-modal');
+    if (modal) {
+      modal.classList.remove('active');
+    }
+    if (this.devtoolsEscapeHandler) {
+      document.removeEventListener('keydown', this.devtoolsEscapeHandler);
+      this.devtoolsEscapeHandler = null;
+    }
   }
 }
 

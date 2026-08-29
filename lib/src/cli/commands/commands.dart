@@ -119,7 +119,10 @@ class ProjectCommands {
         .where((element) => element.trim().isNotEmpty)
         .toList();
     List<String> serveCommands = [
-      '--enable-vm-service',
+      // Bind address defaults to localhost, which is unreachable from
+      // outside a Docker container even when the port is published — bind
+      // to 0.0.0.0 so the debugger's DevTools panel can reach it.
+      '--enable-vm-service=8181/0.0.0.0',
       '--disable-service-auth-codes'
     ];
     var runCommand = <String>[
