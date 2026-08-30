@@ -14,7 +14,7 @@ import 'package:finch/finch_app.dart';
 import 'package:archive/archive_io.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as p;
-import 'package:http/http.dart' as http;
+import 'package:finch/src/tools/http/http.dart';
 
 class ProjectCommands {
   Map<String, dynamic> finchConfigs = {};
@@ -119,7 +119,10 @@ class ProjectCommands {
         .where((element) => element.trim().isNotEmpty)
         .toList();
     List<String> serveCommands = [
-      '--enable-vm-service',
+      // Bind address defaults to localhost, which is unreachable from
+      // outside a Docker container even when the port is published — bind
+      // to 0.0.0.0 so the debugger's DevTools panel can reach it.
+      '--enable-vm-service=8181/0.0.0.0',
       '--disable-service-auth-codes'
     ];
     var runCommand = <String>[
@@ -131,20 +134,75 @@ class ProjectCommands {
     ];
     runCommand.addAll(args);
 
+    // Terminal WebSocket: streams the running app's stdout/stderr to any
+    // connected client and lets a client send text back in as if it had
+    // been typed at this same prompt (handled by handleLine, wired below).
+    HttpServer? terminalServer;
+    final terminalClients = <WebSocket>{};
+    Future<void> Function(String)? onTerminalCommand;
+
+    void broadcastTerminal(String message) {
+      for (var ws in terminalClients.toList()) {
+        try {
+          ws.add(message);
+        } catch (_) {
+          terminalClients.remove(ws);
+        }
+      }
+    }
+
+    if (serve) {
+      var terminalPort =
+          int.tryParse(controller.getOption('terminalPort', def: '8282')) ??
+              8282;
+      terminalServer = await HttpServer.bind(
+        InternetAddress.anyIPv4,
+        terminalPort,
+      );
+      terminalServer.listen((HttpRequest request) async {
+        if (WebSocketTransformer.isUpgradeRequest(request)) {
+          var socket = await WebSocketTransformer.upgrade(request);
+          terminalClients.add(socket);
+          socket.listen(
+            (message) async {
+              if (message is String && message.trim().isNotEmpty) {
+                await onTerminalCommand?.call(message.trim());
+              }
+            },
+            onDone: () => terminalClients.remove(socket),
+            onError: (_) => terminalClients.remove(socket),
+          );
+        } else {
+          request.response.statusCode = HttpStatus.forbidden;
+          await request.response.close();
+        }
+      });
+      CappConsole.write(
+        "Finch terminal WebSocket listening on ws://localhost:${terminalServer.port}",
+        CappColors.info,
+      );
+    }
+
     CappConsole.write(runCommand.join(' '), CappColors.info);
     var proccess = await Process.start(
       'dart',
       runCommand.sublist(1),
       mode: ProcessStartMode.normal,
       workingDirectory: File(path).parent.parent.path,
+      environment: {
+        if (terminalServer != null)
+          'FINCH_TERMINAL_PORT': terminalServer.port.toString(),
+      },
     );
 
     // Forward stdout and stderr to console
     proccess.stdout.listen((data) {
       stdout.add(data);
+      broadcastTerminal(utf8.decode(data, allowMalformed: true));
     });
     proccess.stderr.listen((data) {
       stderr.add(data);
+      broadcastTerminal(utf8.decode(data, allowMalformed: true));
     });
 
     var help = "Project is running (${proccess.pid})...\n\n"
@@ -156,7 +214,8 @@ class ProjectCommands {
         "│ * Press 'i' to write info           │\n"
         "│ * Press 'h' to show history         │\n"
         "│ * Press 'q' to quit the project     │\n"
-        "└─────────────────────────────────────┘\n";
+        "└─────────────────────────────────────┘\n"
+        "${terminalServer != null ? "\nTerminal WebSocket: ws://localhost:${terminalServer.port}\n" : ''}";
 
     // Read raw keystrokes ourselves (no OS line-buffering, no OS echo). This
     // is what lets us drop arrow-key escape sequences before they ever reach
@@ -209,13 +268,19 @@ class ProjectCommands {
           runCommand.sublist(1),
           mode: ProcessStartMode.normal,
           workingDirectory: File(path).parent.parent.path,
+          environment: {
+            if (terminalServer != null)
+              'FINCH_TERMINAL_PORT': terminalServer.port.toString(),
+          },
         );
         // Forward stdout and stderr to console
         proccess.stdout.listen((data) {
           stdout.add(data);
+          broadcastTerminal(utf8.decode(data, allowMalformed: true));
         });
         proccess.stderr.listen((data) {
           stderr.add(data);
+          broadcastTerminal(utf8.decode(data, allowMalformed: true));
         });
       } else if (['q', 'qy', 'qq'].contains(userInput.toLowerCase())) {
         var res = true;
@@ -255,6 +320,9 @@ class ProjectCommands {
         }
       }
     }
+
+    // Let websocket terminal clients send commands the same way keystrokes do.
+    onTerminalCommand = handleLine;
 
     // Listen for user input in a separate loop
     stdin.listen((input) async {
@@ -598,11 +666,11 @@ class ProjectCommands {
     var githubUrl = 'https://api.github.com/users/uproid/repos';
     var request = await CappConsole.progress(
       "Fetching templates from GitHub",
-      () async => http.get(Uri.parse(githubUrl)),
+      () async => FinchHttp.get(Uri.parse(githubUrl)),
       type: CappProgressType.timer,
     );
 
-    if (request.statusCode == 200) {
+    if (request.status == 200) {
       var repos = jsonDecode(request.body) as List<dynamic>;
       int index = 0;
       for (var repo in repos) {
@@ -623,7 +691,7 @@ class ProjectCommands {
       }
     } else {
       return CappConsole(
-        "Failed to fetch templates from GitHub. Status code: ${request.statusCode}",
+        "Failed to fetch templates from GitHub. Status code: ${request.status}",
         CappColors.error,
       );
     }

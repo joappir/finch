@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:finch/tools.dart';
 import 'package:test/test.dart';
 import 'package:finch/src/forms/advanced_form.dart';
 import 'package:finch/src/forms/form_validator.dart';
@@ -7,8 +8,6 @@ import 'package:finch/src/tools/console.dart';
 import 'package:finch/src/views/htmler.dart';
 import 'package:finch/finch_route.dart';
 import 'package:finch/finch_app.dart';
-import 'package:finch/finch_tools.dart';
-import 'package:http/http.dart' as http;
 import 'package:html/parser.dart';
 
 void main() async {
@@ -356,7 +355,7 @@ void main() async {
 
   group("Finch Server Test", () {
     test("Test List Cookies", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/test_cookies/list"),
         headers: {
           'Cookie': 'test_cookie=TEST_VALUE;',
@@ -376,7 +375,7 @@ void main() async {
     });
 
     test("Test Delete Cookie by Backend", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse(
           "http://localhost:${httpServer.port}/test_cookies/delete_cookies?key=test_cookie",
         ),
@@ -397,15 +396,15 @@ void main() async {
     });
 
     test("Test 200", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}"),
       );
       expect(req.body, 'TEST', reason: "Response body should be 'TEST'");
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test("Test API", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/api/info"),
       );
       var data = jsonDecode(req.body);
@@ -416,11 +415,11 @@ void main() async {
         true,
         reason: "timestamp should be > 0",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test('test api root path', () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/api"),
       );
       var data = jsonDecode(req.body);
@@ -430,11 +429,11 @@ void main() async {
         true,
         reason: "is_api should be true",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test("Test API 404", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/api/notfound"),
       );
       var data = jsonDecode(req.body);
@@ -445,11 +444,11 @@ void main() async {
         true,
         reason: "timestamp should be > 0",
       );
-      expect(req.statusCode, 404, reason: "Status code should be 404");
+      expect(req.status, 404, reason: "Status code should be 404");
     });
 
     test("Test 404", () async {
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse("http://localhost:${httpServer.port}/notfound"),
       );
       var data = req.body;
@@ -459,11 +458,11 @@ void main() async {
         true,
         reason: "Response body should be html",
       );
-      expect(req.statusCode, 404, reason: "Status code should be 404");
+      expect(req.status, 404, reason: "Status code should be 404");
     });
 
     test("Test Method", () async {
-      var req = await http.post(
+      var req = await FinchHttp.post(
         Uri.parse("http://localhost:${httpServer.port}/notfound"),
       );
       var data = req.body;
@@ -473,18 +472,19 @@ void main() async {
         true,
         reason: "Response body should be html",
       );
-      expect(req.statusCode, 404, reason: "Status code should be 404");
+      expect(req.status, 404, reason: "Status code should be 404");
     });
 
     test("Test POST data", () async {
       var random = Random().nextInt(100);
-      var req = await http.post(
+      var req = await FinchHttp.post(
         Uri.parse("http://localhost:${httpServer.port}/api/post"),
         body: {
           'test': 'TEST',
           'random': '$random',
         },
       );
+      print(req.body);
       var data = jsonDecode(req.body);
       expect(
         data['sended']['test'],
@@ -497,12 +497,12 @@ void main() async {
         random,
         reason: "Sendend random should be $random",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
   });
 
   test("Test Authenticator OK!", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/api/auth/ok"),
     );
     var data = jsonDecode(req.body);
@@ -512,11 +512,11 @@ void main() async {
       'TEST',
       reason: "Response body should be TEST",
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test("Test Authenticator FAILED!", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/api/auth/failed"),
     );
     var data = jsonDecode(req.body);
@@ -525,7 +525,7 @@ void main() async {
       false,
       reason: "Response success should be false",
     );
-    expect(req.statusCode, 404, reason: "Status code should be 404");
+    expect(req.status, 404, reason: "Status code should be 404");
   });
 
   test("Test Cookies", () async {
@@ -535,7 +535,7 @@ void main() async {
     var headers = {
       'Cookie': cookies,
     };
-    var req = await http.post(
+    var req = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/api/post"),
       headers: headers,
     );
@@ -553,7 +553,7 @@ void main() async {
       'johndoe',
       reason: "Response success should be johndoe",
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test("Test Cookies & Languages", () async {
@@ -564,7 +564,7 @@ void main() async {
     var headers = {
       'Cookie': cookies,
     };
-    var req = await http.post(
+    var req = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/language_cookie"),
       headers: headers,
     );
@@ -572,11 +572,11 @@ void main() async {
     var resCookies = data['cookies'] as List;
     var language = data['language'];
 
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
     expect(language, 'es', reason: "Language should be 'es'");
     expect(resCookies.first.toString(), contains('language=es;'));
 
-    req = await http.post(
+    req = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/de/language_cookie"),
       headers: headers,
     );
@@ -584,13 +584,13 @@ void main() async {
     resCookies = data['cookies'];
     language = data['language'];
 
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
     expect(language, 'de', reason: "Language should be 'de'");
     expect(resCookies.first.toString(), contains('language=de;'));
   });
 
   test("check URL", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/checkurl"),
     );
     var data = req.body;
@@ -599,11 +599,11 @@ void main() async {
       "http://localhost:${httpServer.port}/test",
       reason: "Response success should be /test",
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test("check Error", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/error"),
     );
     var data = req.body;
@@ -612,11 +612,11 @@ void main() async {
       true,
       reason: "Response success should contain 'test error page'",
     );
-    expect(req.statusCode, 502, reason: "Status code should be 502");
+    expect(req.status, 502, reason: "Status code should be 502");
   });
 
   test("check Widget events", () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/widget"),
     );
     var data = req.body;
@@ -626,11 +626,11 @@ void main() async {
       "http://localhost:${httpServer.port}/test\nparamValue\ntest.translate",
       reason: "Response success should contain 'test error page'",
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test('Test renderTag', () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/htmler"),
     );
     var html = req.body;
@@ -679,17 +679,16 @@ void main() async {
       html,
       contains('TEST CENTER COMMENT'),
     );
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
   });
 
   test('Test SSE', () async {
-    var req = await http.get(
+    var req = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/sse"),
     );
-
-    expect(req.statusCode, 200, reason: "Status code should be 200");
+    expect(req.status, 200, reason: "Status code should be 200");
     expect(
-      req.headers['content-type'],
+      req.headers['content-type']?.join(''),
       'text/event-stream; charset=utf-8',
       reason: "Content-Type should be text/event-stream",
     );
@@ -709,19 +708,19 @@ void main() async {
   });
 
   test('Test Cache', () async {
-    var req1 = await http.get(
+    var req1 = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/without_cache_test"),
     );
-    var req2 = await http.get(
+    var req2 = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/with_cache_test"),
     );
     await Future.delayed(Duration(seconds: 1));
-    var req3 = await http.get(
+    var req3 = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/with_cache_test"),
     );
 
-    expect(req1.statusCode, 200, reason: "Status code should be 200");
-    expect(req2.statusCode, 200, reason: "Status code should be 200");
+    expect(req1.status, 200, reason: "Status code should be 200");
+    expect(req2.status, 200, reason: "Status code should be 200");
     expect(
       req1.body,
       equals(req2.body),
@@ -735,7 +734,7 @@ void main() async {
   });
 
   test('Test Advanced Form', () async {
-    var reqGet = await http.get(
+    var reqGet = await FinchHttp.get(
       Uri.parse("http://localhost:${httpServer.port}/advanced_form"),
       headers: {
         'Cookie': 'DARTSESSID=0f27deca10d6d3a19e9b5819c3f72eac;',
@@ -745,10 +744,10 @@ void main() async {
 
     var cookies = <String>[];
     if (reqGet.headers['set-cookie'] != null) {
-      cookies.add(reqGet.headers['set-cookie']!);
+      cookies.add(reqGet.headers['set-cookie']!.join('; '));
     }
 
-    var reqPost = await http.post(
+    var reqPost = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/advanced_form"),
       headers: {
         'Cookie': cookies.join('; '),
@@ -762,7 +761,7 @@ void main() async {
     );
     var dataPost = jsonDecode(reqPost.body);
 
-    var reqPost2 = await http.post(
+    var reqPost2 = await FinchHttp.post(
       Uri.parse("http://localhost:${httpServer.port}/advanced_form"),
       headers: {
         'Cookie': cookies.join('; '),
@@ -776,7 +775,7 @@ void main() async {
     );
     var dataPost2 = jsonDecode(reqPost2.body);
 
-    expect(reqPost.statusCode, 200, reason: "Status code should be 200");
+    expect(reqPost.status, 200, reason: "Status code should be 200");
     expect(
       dataPost['test_form']['success'],
       isTrue,
@@ -818,7 +817,7 @@ void main() async {
         List.generate(10, (index) => Random().nextInt(26) + 97),
       );
 
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse(
           "http://localhost:${httpServer.port}/check_param_classic/$value1/$value2",
         ),
@@ -834,7 +833,7 @@ void main() async {
         value2,
         reason: "key2 should be '$value2'",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test('Finch Params', () async {
@@ -844,7 +843,7 @@ void main() async {
       var value2 = String.fromCharCodes(
         List.generate(10, (index) => Random().nextInt(26) + 97),
       );
-      var req = await http.get(
+      var req = await FinchHttp.get(
         Uri.parse(
           "http://localhost:${httpServer.port}/check_param_finch/$value1/$value2",
         ),
@@ -862,12 +861,12 @@ void main() async {
         value2,
         reason: "key2 should be '$value2'",
       );
-      expect(req.statusCode, 200, reason: "Status code should be 200");
+      expect(req.status, 200, reason: "Status code should be 200");
     });
 
     test('Url segments with special characters', () async {
       String url = 'http://localhost:${httpServer.port}/%AF/test';
-      var req = await http.get(Uri.parse(url));
+      var req = await FinchHttp.get(Uri.parse(url));
       var data = jsonDecode(req.body);
       expect(
         data['key1'],
@@ -883,8 +882,8 @@ void main() async {
 
     test('Url segments with special characters 404', () async {
       String url = 'http://localhost:${httpServer.port}/%AF/test/404';
-      var req = await http.get(Uri.parse(url));
-      expect(req.statusCode, 404, reason: "Status code should be 404");
+      var req = await FinchHttp.get(Uri.parse(url));
+      expect(req.status, 404, reason: "Status code should be 404");
     });
   });
 }

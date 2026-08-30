@@ -9,6 +9,7 @@ services:
     ports:
       - "8085:8085"
       - "8181:8181"
+      - "8282:8282"
     build:
       context: .
     environment:

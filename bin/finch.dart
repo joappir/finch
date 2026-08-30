@@ -120,6 +120,14 @@ void main(List<String> args) async {
             shortName: 'a',
             description: 'Arguments for app file',
           ),
+          CappOption(
+            name: 'terminalPort',
+            shortName: 'tp',
+            description:
+                'Port for the terminal WebSocket that streams console '
+                'output and accepts remote commands',
+            value: '8282',
+          ),
         ],
       ),
       CappController(

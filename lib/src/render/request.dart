@@ -183,21 +183,22 @@ class Request {
     var ln = segments.isNotEmpty ? segments[0] : '';
     if (ln.isNotEmpty && FinchApp.config.languages.contains(ln)) {
       changeLanguege(ln);
-      return ln;
-    }
-
-    if (isApiEndpoint && hasData('lang')) {
-      return data('lang', def: 'en');
-    }
-
-    ln = getCookie(
-      'language',
-      safe: false,
-      def: getSession(
+    } else if (isApiEndpoint && hasData('lang')) {
+      ln = data('lang', def: 'en');
+    } else {
+      ln = getCookie(
         'language',
-        def: _setting['language'] ?? 'en',
-      ).toString(),
-    );
+        safe: false,
+        def: getSession(
+          'language',
+          def: _setting['language'] ?? 'en',
+        ).toString(),
+      );
+    }
+
+    if (!FinchApp.config.languages.contains(ln)) {
+      ln = 'en';
+    }
 
     return ln.trim().toLowerCase();
   }

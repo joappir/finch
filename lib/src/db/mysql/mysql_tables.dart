@@ -310,7 +310,8 @@ extension MySqlTable on MTable {
 /// }
 /// ```
 class MySqlResult
-    implements SqlDatabaseResult<MySQLConnection, IResultSet, ResultSetRow> {
+    implements
+        SqlDatabaseResult<MySQLConnectionPool, IResultSet, ResultSetRow> {
   /// The underlying MySQL result set from the database driver.
   @override
   final IResultSet resultSet;
@@ -432,7 +433,7 @@ class MySqlResult
   }
 
   @override
-  MySQLConnection database;
+  MySQLConnectionPool database;
 }
 
 abstract class DataAssoc {

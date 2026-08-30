@@ -1,4 +1,24 @@
 
+## 1.6.0
+- Refactored the database connection process: added a unified `DBManager` (`FinchApp.db`) that connects/closes MongoDB, MySQL and SQLite together
+  - `mongoDb`, `mysqlDriver` and `sqliteDriver` are now backed by dedicated `DBConnection` classes (`MongodbConn`, `MySqlConn`, `SqliteConn`) instead of ad-hoc fields on `FinchApp`
+  - MongoDB and MySQL now connect through connection pools (`Db.pool`, `MySQLConnectionPool`), configurable via a new `maxConnections` option on `FinchDBConfig`/`FinchMysqlConfig`
+  - MySQL migrations now run inside a real transactional session (`MySQLConnectionPool.transactional`)
+- Added `FinchApp.onError()` to register a callback that is invoked whenever an error is logged through `Console`
+- Removed several third-party dependencies in favor of small native implementations:
+  - Removed `dotenv`; added a native `EnvReader`/`EnvParser` (`.env` parsing, quotes, `$VAR`/`${VAR}` interpolation, comments)
+  - Removed `http`; added `FinchHttp` (`FinchHttp.get()`/`FinchHttp.post()`), exported from `finch/tools.dart`
+  - Removed `cron`; `FinchCron` now uses its own built-in `CronSchedule` parser/matcher (supports both 5-field and 6-field cron expressions)
+  - Removed `logger`; `Console`/`Print` now log through a native, colorized `Log` class
+  - Removed `crypto`; `toMd5()` now uses `pointycastle`
+- Developed a **Terminal** panel in the debugger console: `finch serve` opens a WebSocket server (`--terminalPort`, default `8282`) that streams the running app's stdout/stderr and lets you send commands back, viewable from the browser debugger
+- Added **Dart DevTools** panel to the debugger console, embedded directly in the browser UI
+  - `--enable-vm-service` now binds to `0.0.0.0:8181` (instead of localhost) so DevTools is reachable from inside Docker
+  - `docker-compose.yaml` now exposes port `8282` for the terminal
+- Added `--json`/`-j` option to the `routes` CLI command to print the routes list as JSON
+- Fixed language detection order in `Request.language` (URL segment, then API `lang` param, then cookie/session), and validated the result against `config.languages`
+- Updated dependencies: `html` to `^0.15.7`, `mime` to `^2.1.0`, `archive` to `^4.2.0`, `capp` to `^2.2.0`, `sqlite3` to `^3.5.2`, `yaml` to `^3.1.4`, `mcp_models` to `2.1.0`
+
 ## 1.5.2
 - Removed the `Request rq` parameter from `FinchApp.addRouting()` callbacks; request data remains available through `Context.rq` inside route handlers
 - Improved route URL generation and method checks by passing request-specific values explicitly

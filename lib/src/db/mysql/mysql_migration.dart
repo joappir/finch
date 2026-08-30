@@ -15,7 +15,7 @@ import 'package:finch/finch_app.dart';
 /// have been executed.
 class MysqlMigration {
   /// The MySQL database connection used for executing migrations.
-  DatabaseDriver<MySQLConnection> db;
+  DatabaseDriver<MySQLConnectionPool> db;
 
   /// Creates a new [MysqlMigration] instance with the provided database connection.
   /// [db] The MySQL connection to use for migration operations.
@@ -82,30 +82,32 @@ class MysqlMigration {
     var executedFiles = <String>[];
     if (migrations.isNotEmpty) {
       for (var migration in migrations) {
-        await db.executeString('START TRANSACTION;');
         var check = await _checkExcutedMigration(migration.uniqueName);
         if (check.exist) continue;
 
-        try {
-          final sqls = migration.upSQLs;
-          for (var sql in sqls) {
-            var res = await db.executeString(sql, separateStatements: true);
-            if (res.error) {
-              throw res.errorMsg;
+        await db.database.transactional((MySQLConnection dbSession) async {
+          await dbSession.execute('START TRANSACTION;');
+          try {
+            final sqls = migration.upSQLs;
+            for (var sql in sqls) {
+              var arrSql = DatabaseDriver.splitSqlStatements(sql);
+              for (var sql in arrSql) {
+                await db.database.execute(sql);
+              }
             }
+            await dbSession.execute('COMMIT;');
+            executedFiles.add(migration.uniqueName);
+            await migrationTable.insert(db, {
+              'file': QVar(migration.uniqueName),
+              'sort': QVar(DateTime.now().millisecondsSinceEpoch.toString()),
+            });
+          } catch (e) {
+            await dbSession.execute('ROLLBACK;');
+            throw Exception(
+              'Error executing migration: ${migration.uniqueName}\nError message: \n$e',
+            );
           }
-          await db.executeString('COMMIT;');
-          executedFiles.add(migration.uniqueName);
-          await migrationTable.insert(db, {
-            'file': QVar(migration.uniqueName),
-            'sort': QVar(DateTime.now().millisecondsSinceEpoch.toString()),
-          });
-        } catch (e) {
-          await db.executeString('ROLLBACK;');
-          throw Exception(
-            'Error executing migration: ${migration.uniqueName}\nError message: \n$e',
-          );
-        }
+        });
       }
     } else if (files.isEmpty) {
       throw Exception(
@@ -116,33 +118,32 @@ class MysqlMigration {
         var filename = path.basename(file.path);
         var exists = await _checkExcutedMigration(filename);
         if (exists.exist) continue;
+        var sqlContent = await file.readAsString();
+        sqlContent = sqlContent.split('-- ## ROLL BACK:')[0];
+        if (sqlContent.isEmpty) continue;
 
-        try {
-          await db.executeString('START TRANSACTION;');
-          var sqlContent = await file.readAsString();
-          sqlContent = sqlContent.split('-- ## ROLL BACK:')[0];
-          if (sqlContent.isEmpty) continue;
-          var res = await db.executeString(
-            sqlContent.trim(),
-            separateStatements: true,
-          );
-          if (res.success) {
+        db.database.transactional((sessionDb) async {
+          try {
+            await sessionDb.execute('START TRANSACTION;');
+            var arrSql = DatabaseDriver.splitSqlStatements(sqlContent.trim());
+            for (var sql in arrSql) {
+              await sessionDb.execute(
+                sql.trim(),
+              );
+            }
             executedFiles.add(filename);
             await migrationTable.insert(db, {
               'file': QVar(filename),
               'sort': QVar(DateTime.now().millisecondsSinceEpoch.toString()),
             });
-            await db.executeString('COMMIT;');
-          } else {
-            throw res.errorMsg;
+            await sessionDb.execute('COMMIT;');
+          } catch (e) {
+            await sessionDb.execute('ROLLBACK;');
+            throw Exception(
+              'Error executing migration file: $filename\nError message: \n$e',
+            );
           }
-        } catch (e) {
-          await db.executeString('ROLLBACK;');
-          throw Exception(
-            'Error executing migration file: $filename\nError message: \n$e',
-          );
-        }
-
+        });
         await db.executeString('COMMIT;');
       }
     }

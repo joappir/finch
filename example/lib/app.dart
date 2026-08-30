@@ -115,6 +115,8 @@ void main([List<String>? args]) async {
     FinchCron(
       schedule: FinchCron.evryDay(2),
       onCron: (index, cron) async {
+        Console.p(
+            "#1) `${FinchCron.evryDay(2)}` Cron job executed at ${DateTime.now()}, index: $index");
         if (app.mongoDb.isConnected) {
           ExampleCollections().deleteAll();
         }
@@ -128,6 +130,8 @@ void main([List<String>? args]) async {
     FinchCron(
       schedule: "0 * * * *",
       onCron: (index, cron) async {
+        Console.p(
+            "#2) `0 * * * *` Cron job executed at ${DateTime.now()}, index: $index");
         if (app.mongoDb.isConnected) {
           ExampleCollections().insertExample(ExampleModel(
             title: DateTime.now().toString(),
@@ -135,7 +139,6 @@ void main([List<String>? args]) async {
           ));
         }
       },
-      delayFirstMoment: true,
     ).start(),
   );
 
